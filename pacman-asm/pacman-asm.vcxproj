@@ -23,6 +23,13 @@
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\irvine;%(IncludePaths)</IncludePaths>
     </MASM>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="menuUtils.inc" />
+    <None Include="utils.inc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="highscore.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

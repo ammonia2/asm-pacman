@@ -3,4 +3,11 @@
   <ItemGroup>
     <MASM Include="main.asm" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="utils.inc" />
+    <None Include="menuUtils.inc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="highscore.txt" />
+  </ItemGroup>
 </Project>
