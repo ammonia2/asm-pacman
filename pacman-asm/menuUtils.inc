@@ -1,4 +1,3 @@
-;----------------------------------------------------
 MenuLoop PROC
     .REPEAT
         call Clrscr
@@ -33,7 +32,6 @@ MenuLoop PROC
     ret
 MenuLoop ENDP
 
-;----------------------------------------------------
 StartGame PROC
     call Clrscr
     
@@ -43,16 +41,20 @@ StartGame PROC
     call WriteDec
     call Crlf
     
+    call startLevel1
+
+
     mov edx, OFFSET keyPressMsg
     call WriteString
     call ReadChar
     
     ; TODO: level init
     mov currentMenu, MENU_HOME
+
+
     ret
 StartGame ENDP
 
-;----------------------------------------------------
 DisplayHomeScreen PROC
     mov edx, OFFSET titleArt
     call WriteString
@@ -82,7 +84,6 @@ DisplayHomeScreen PROC
     ret
 DisplayHomeScreen ENDP
 
-;----------------------------------------------------
 HandleHomeInput PROC
     .IF al == '1'
         mov currentMenu, MENU_LEVELS
@@ -95,7 +96,6 @@ HandleHomeInput PROC
     ret
 HandleHomeInput ENDP
 
-;----------------------------------------------------
 DisplayLevelSelect PROC
     mov edx, OFFSET titleArt
     call WriteString
@@ -107,7 +107,6 @@ DisplayLevelSelect PROC
     ret
 DisplayLevelSelect ENDP
 
-;----------------------------------------------------
 HandleLevelInput PROC
     .IF al >= '1' && al <= '5'
         ; Convert ASCII to number (subtract '0')
@@ -125,7 +124,6 @@ HandleLevelInput PROC
     ret
 HandleLevelInput ENDP
 
-;----------------------------------------------------
 DisplayInstructions PROC
     mov edx, OFFSET titleArt
     call WriteString
@@ -145,7 +143,6 @@ DisplayInstructions PROC
     ret
 DisplayInstructions ENDP
 
-;----------------------------------------------------
 DisplayHighScores PROC
     mov edx, OFFSET titleArt
     call WriteString

@@ -24,8 +24,8 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
+    <None Include="level1.inc" />
     <None Include="menuUtils.inc" />
-    <None Include="utils.inc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="highscore.txt" />
@@ -96,6 +96,10 @@
       <AdditionalDependencies>Irvine32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\irvine;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
