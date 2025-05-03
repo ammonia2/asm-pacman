@@ -21,8 +21,9 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     PACMAN         BYTE 'P'
     wallChar       BYTE 219 ; Solid block character
     dotChar        BYTE '.'
-    pacmanRow      DWORD 23
+    pacmanRow      DWORD 24
     pacmanCol      DWORD 60
+    gridVal        BYTE ?
     
     ; 360
     GRID           BYTE GRID_WIDTH * GRID_HEIGHT DUP(?)
@@ -35,6 +36,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ; Player data
     playerName     BYTE 31 DUP(0)
     currentScore   DWORD 0
+    scoreStr       BYTE "Current Score: ", 0
 
     ; Menu state
     currentMenu    DWORD MENU_HOME
@@ -81,6 +83,7 @@ InitializeGame ENDP
 
 startLevel1 PROC
     call initialiseLevel1
+    call playLevel1
 
     ret
 startLevel1 ENDP

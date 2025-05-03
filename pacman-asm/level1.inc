@@ -115,7 +115,7 @@ initialiseLevel1 PROC
             jmp MoveCharacter_L1
 
         StorePacman_L1:
-            mov al, PACMAN
+            mov al, 50h
             jmp MoveCharacter_L1
     
         MoveCharacter_L1:
@@ -128,14 +128,51 @@ initialiseLevel1 PROC
         pop ecx
         dec ecx
         jnz OuterLoopL1
-    
-    call playLevel1
 
     ret
 initialiseLevel1 ENDP
 
 
+getGridVal PROC uses eax ebx ecx
+    mov ebx, pacmanRow
+    imul ebx, GRID_WIDTH
+    mov ecx, pacmanCol
+    add ebx, ecx
+    mov al, GRID[ebx]
+    mov gridVal, al
+
+    ret
+getGridVal ENDP
+
+storePacmanL1 PROC uses ebx ecx
+    mov ebx, pacmanRow
+    imul ebx, GRID_WIDTH
+    mov ecx, pacmanCol
+    add ebx, ecx
+    mov GRID[ebx], 50h
+
+    ret
+storePacmanL1 ENDP
+
+storeEmptyCharL1 PROC uses ebx ecx
+    mov ebx, pacmanRow
+    imul ebx, GRID_WIDTH
+    mov ecx, pacmanCol
+    add ebx, ecx
+    mov GRID[ebx], 20h
+
+    ret
+storeEmptyCharL1 ENDP
+
+
 drawLevel1 PROC
+    ; curr score
+    mov edx, OFFSET scoreStr
+    call writestring
+    mov eax, currentScore
+    call writeint
+    call Crlf
+
     mov ecx, GRID_HEIGHT * GRID_WIDTH
     mov ebx, 0
     mov esi, 1 ; col counter
@@ -158,8 +195,120 @@ drawLevel1 ENDP
 
 
 playLevel1 PROC
+    call Clrscr
     call drawLevel1
+    inputLoop_L1:
+        call ReadChar
 
-    
+        cmp al, 77h ; lowercase 'w'
+        jnz inputCheck2_L1
+
+        call storeEmptyCharL1
+        sub pacmanRow, 1
+
+        call getGridVal
+        mov bl, wallChar
+        cmp gridVal, bl
+        je revertMoveUp_L1
+
+        cmp pacmanRow, 0
+        jl revertMoveUp_L1
+
+        jmp inputDone_L1
+
+    revertMoveUp_L1:
+        add pacmanRow, 1
+        call storePacmanL1
+        jmp invalidInput_L1
+
+    inputCheck2_L1:
+        cmp al, 61h ; lowercase 'a'
+        jnz inputCheck3_L1
+
+        call storeEmptyCharL1
+        sub pacmanCol, 1
+
+        call getGridVal
+        mov bl, wallChar
+        cmp gridVal, bl
+        je revertMoveLeft_L1
+
+        cmp pacmanCol, 0
+        jl revertMoveLeft_L1
+
+        jmp inputDone_L1
+
+    revertMoveLeft_L1:
+        add pacmanCol, 1
+        call storePacmanL1
+        jmp invalidInput_L1
+
+    inputCheck3_L1:
+        cmp al, 73h ; lowercase 's'
+        jnz inputCheck4_L1
+
+        call storeEmptyCharL1
+        add pacmanRow, 1
+
+        call getGridVal
+        mov bl, wallChar
+        cmp gridVal, bl
+        je revertMoveDown_L1
+
+        cmp pacmanRow, GRID_HEIGHT-1
+        ja revertMoveDown_L1
+
+        jmp inputDone_L1
+
+    revertMoveDown_L1:
+        sub pacmanRow, 1
+        call storePacmanL1
+        jmp invalidInput_L1
+
+    inputCheck4_L1:
+        cmp al, 64h ; lowercase 'd'
+        jnz invalidInput_L1
+
+        call storeEmptyCharL1
+        add pacmanCol, 1
+
+        call getGridVal
+        mov bl, wallChar
+        cmp gridVal, bl
+        je revertMoveRight_L1
+
+        cmp pacmanCol, GRID_WIDTH-1
+        ja revertMoveRight_L1
+
+        jmp inputDone_L1
+
+    revertMoveRight_L1:
+        sub pacmanCol, 1
+        call storePacmanL1
+        jmp invalidInput_L1
+
+        ; input processing
+    inputDone_L1:
+        ; updating grid
+
+        ; Note: The original offset calculation is implicitly done by getGridVal before this point
+        ; The result (char at new location) is already in gridVal.
+
+        cmp gridVal, '.'
+        jnz skipScoreUpdate_L1
+        inc currentScore
+
+    skipScoreUpdate_L1:
+        call storePacmanL1
+
+        call Clrscr
+        call drawLevel1 ; using updated grid
+
+        jmp inputLoop_L1
+
+    invalidInput_L1:
+        jmp inputLoop_L1
+
     ret
+
 playLevel1 ENDP
