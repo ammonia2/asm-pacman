@@ -17,11 +17,15 @@ GRID_HEIGHT = 30
 GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 
 .data
+    ; Grid data
     PACMAN         BYTE 'P'
     wallChar       BYTE 219 ; Solid block character
     dotChar        BYTE '.'
     pacmanRow      DWORD 23
     pacmanCol      DWORD 60
+    
+    ; 360
+    GRID           BYTE GRID_WIDTH * GRID_HEIGHT DUP(?)
 
     ; HighScore File
     scoreFile      BYTE "highscore.txt", 0
