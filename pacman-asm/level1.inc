@@ -12,92 +12,81 @@ initialiseLevel1 PROC
         InnerLoopL1:
             inc edi
     
-            ; Check if we're on the border (top, bottom, left, right)
-            cmp esi, 0              ; Top row?
+            cmp esi, 0
             je StoreWall_L1
-            cmp esi, GRID_HEIGHT-1  ; Bottom row?
+            cmp esi, GRID_HEIGHT-1
             je StoreWall_L1
-            cmp edi, 0              ; Left column?
+            cmp edi, 0
             je StoreWall_L1
-            cmp edi, GRID_WIDTH-1   ; Right column?
+            cmp edi, GRID_WIDTH-1
             je StoreWall_L1
     
-            ; Check for internal walls - horizontal wall in middle
-            mov eax, GRID_HEIGHT
-            shr eax, 1              ; Divide by 2 for middle row
-            cmp esi, eax            ; Middle row?
-            jne CheckWall1_L1
-            cmp edi, 20             ; Draw wall sections in middle row
-            jle StoreWall_L1
-            cmp edi, 40
-            jge CheckMidSectionL1
-            jmp StoreDot_L1
-    
-        CheckMidSectionL1:
-            cmp edi, 80
-            jle StoreWall_L1
-            cmp edi, 100
-            jge StoreWall_L1
-            jmp StoreDot_L1
-    
-        CheckWall1_L1:
-            ; Vertical wall 1/4 from left
-            mov eax, GRID_WIDTH
-            shr eax, 2              ; 1/4 of grid width
-            cmp edi, eax
+            cmp edi, 16
             jne CheckWall2_L1
-            cmp esi, 5
+            cmp esi, 4
             jl StoreDot_L1
-            cmp esi, GRID_HEIGHT-5
+            cmp esi, 16
             jg StoreDot_L1
             jmp StoreWall_L1
     
         CheckWall2_L1:
-            ; Vertical wall 3/4 from left
-            mov eax, GRID_WIDTH
-            shr eax, 2
-            imul eax, 3             ; 3/4 of grid width
-            cmp edi, eax
+            ; Top horizontal of 2
+            cmp esi, 6
+            jne CheckMiddlePart_L1
+            cmp edi, 28
+            jl CheckWall3_L1
+            cmp edi, 36
+            jg CheckWall3_L1
+            jmp StoreWall_L1
+            
+        CheckMiddlePart_L1:
+            ; Right vertical of 2
+            cmp edi, 36
+            jne CheckBottomPart_L1
+            cmp esi, 6
+            jl CheckWall3_L1
+            cmp esi, 10
+            jg CheckWall3_L1
+            jmp StoreWall_L1
+            
+        CheckBottomPart_L1:
+            ; Bottom horizontal of 2
+            cmp esi, 10
+            jne CheckLeftPart_L1
+            cmp edi, 28
+            jl CheckWall3_L1
+            cmp edi, 36
+            jg CheckWall3_L1
+            jmp StoreWall_L1
+            
+        CheckLeftPart_L1:
+            ; Left vertical of 2
+            cmp edi, 28
+            jne CheckHorizontalBottom_L1
+            cmp esi, 10
+            jl CheckWall3_L1
+            cmp esi, 14
+            jg CheckWall3_L1
+            jmp StoreWall_L1
+            
+        CheckHorizontalBottom_L1:
+            ; bottom most horizontal of 2
+            cmp esi, 14
             jne CheckWall3_L1
-            cmp esi, 5
-            jl StoreDot_L1
-            cmp esi, GRID_HEIGHT-5
-            jg StoreDot_L1
+            cmp edi, 28
+            jl CheckWall3_L1
+            cmp edi, 36
+            jg CheckWall3_L1
             jmp StoreWall_L1
     
         CheckWall3_L1:
-            ; Some horizontal barriers in upper part
-            cmp esi, 7
-            jne CheckWall4_L1
-            cmp edi, 40
-            jl CheckSpecific1_L1
-            cmp edi, 80
-            jg CheckSpecific1_L1
-            jmp StoreWall_L1
-    
-        CheckSpecific1_L1:
-            cmp edi, 30
-            je StoreWall_L1
-            cmp edi, 90
-            je StoreWall_L1
-            jmp StoreDot_L1
-    
-        CheckWall4_L1:
-            ; Some horizontal barriers in lower part
-            cmp esi, GRID_HEIGHT-8
+            cmp edi, 48
             jne CheckPacmanPos_L1
-            cmp edi, 40
-            jl CheckSpecific2_L1
-            cmp edi, 80
-            jg CheckSpecific2_L1
+            cmp esi, 4
+            jl StoreDot_L1
+            cmp esi, 16
+            jg StoreDot_L1
             jmp StoreWall_L1
-    
-        CheckSpecific2_L1:
-            cmp edi, 30
-            je StoreWall_L1
-            cmp edi, 90
-            je StoreWall_L1
-            jmp CheckPacmanPos_L1
 
         CheckPacmanPos_L1:
             cmp esi, pacmanRow
@@ -113,7 +102,6 @@ initialiseLevel1 PROC
         StoreDot_L1:
             mov al, dotChar
             jmp MoveCharacter_L1
-
         StorePacman_L1:
             mov al, 50h
             jmp MoveCharacter_L1
@@ -128,7 +116,6 @@ initialiseLevel1 PROC
         pop ecx
         dec ecx
         jnz OuterLoopL1
-
     ret
 initialiseLevel1 ENDP
 
@@ -166,6 +153,8 @@ storeEmptyCharL1 ENDP
 
 
 drawLevel1 PROC
+    
+
     ; curr score
     mov edx, OFFSET scoreStr
     call writestring
@@ -193,10 +182,10 @@ drawLevel1 PROC
     ret
 drawLevel1 ENDP
 
-
 playLevel1 PROC
     call Clrscr
     call drawLevel1
+
     inputLoop_L1:
         call ReadChar
 
@@ -291,20 +280,15 @@ playLevel1 PROC
     inputDone_L1:
         ; updating grid
 
-        ; Note: The original offset calculation is implicitly done by getGridVal before this point
-        ; The result (char at new location) is already in gridVal.
-
         cmp gridVal, '.'
         jnz skipScoreUpdate_L1
         inc currentScore
 
     skipScoreUpdate_L1:
         call storePacmanL1
-
+        
         call Clrscr
         call drawLevel1 ; using updated grid
-
-        jmp inputLoop_L1
 
     invalidInput_L1:
         jmp inputLoop_L1

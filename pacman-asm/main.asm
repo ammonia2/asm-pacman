@@ -12,8 +12,8 @@ MENU_INSTR = 2
 MENU_SCORES = 3
 MENU_GAME = 4
 
-GRID_WIDTH = 120
-GRID_HEIGHT = 30
+GRID_WIDTH = 65
+GRID_HEIGHT = 20
 GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 
 .data
@@ -25,7 +25,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     pacmanCol      DWORD 60
     gridVal        BYTE ?
     
-    ; 360
+    ; 1300
     GRID           BYTE GRID_WIDTH * GRID_HEIGHT DUP(?)
 
     ; HighScore File
