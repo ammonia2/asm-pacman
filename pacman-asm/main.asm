@@ -12,17 +12,37 @@ MENU_INSTR = 2
 MENU_SCORES = 3
 MENU_GAME = 4
 
-GRID_WIDTH = 65
-GRID_HEIGHT = 20
+; Constants for directions
+UP    = 0
+RIGHT = 1
+DOWN  = 2
+LEFT  = 3
+
+GRID_WIDTH = 45
+GRID_HEIGHT = 22
 GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 
 .data
+    ; Ghost data
+    ghosts         DWORD 20 DUP (?) ; 10 max
+    numGhosts      BYTE ?
+    minValue       DWORD ?
+    maxValue       DWORD ?
+    randomNum      DWORD ?
+    ghostRow       DWORD ?
+    ghostCol       DWORD ?
+    currDist       DWORD 99999
+    ghostDirection BYTE 3 DUP(0)  ; Direction for each ghost (up to 3)
+    possibleDirs   BYTE 4 DUP(0)  ; Array to hold valid directions
+
+
     ; Grid data
     PACMAN         BYTE 'P'
-    wallChar       BYTE 219 ; Solid block character
+    GHOST          BYTE 'G'
+    wallChar       BYTE 177 ; Solid block character
     dotChar        BYTE '.'
-    pacmanRow      DWORD 24
-    pacmanCol      DWORD 60
+    pacmanRow      DWORD 8
+    pacmanCol      DWORD 22
     gridVal        BYTE ?
     
     ; 1300
@@ -67,6 +87,8 @@ INCLUDE level1.inc
 INCLUDE menuUtils.inc
 
 main PROC
+    CALL Randomize
+
     call InitializeGame
     call MenuLoop
     exit
@@ -83,9 +105,57 @@ InitializeGame ENDP
 
 startLevel1 PROC
     call initialiseLevel1
+    call initialiseLevel1Ghosts
     call playLevel1
 
     ret
 startLevel1 ENDP
+
+generateRandomNumber PROC uses eax ebx ecx esi edi
+    mov ebx, maxValue
+    mov ecx, minValue
+    sub ebx, ecx
+    inc ebx
+
+    mov eax, ebx
+    CALL RandomRange
+
+    add eax, ecx
+    mov randomNum, eax
+
+    ret
+generateRandomNumber ENDP
+
+; calculates distance ghost -> PACMAN
+calculateDistance PROC uses ecx edx esi edi
+    ; eax = ghostRow, ebx = ghostCol
+    mov ecx, pacmanRow
+    mov edx, pacmanCol
+    
+    ; row distance
+    .IF eax >= ecx
+        mov esi, eax
+        sub esi, ecx
+    .ELSE
+        mov esi, ecx
+        sub esi, eax
+    .ENDIF
+    
+    ; column distance
+    .IF ebx >= edx
+        mov edi, ebx
+        sub edi, edx
+    .ELSE
+        mov edi, edx
+        sub edi, ebx
+    .ENDIF
+    
+    ; Calculate Manhattan distance (row distance + column distance)
+    mov eax, esi
+    add eax, edi
+    
+    ; Store final result in eax
+    ret
+calculateDistance ENDP
 
 END main
