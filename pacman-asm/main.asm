@@ -32,6 +32,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ghostRow       DWORD ?
     ghostCol       DWORD ?
     currDist       DWORD 99999
+    originalTiles BYTE 10 DUP(0)
     ghostDirection BYTE 3 DUP(0)  ; Direction for each ghost (up to 3)
     possibleDirs   BYTE 4 DUP(0)  ; Array to hold valid directions
 
@@ -81,6 +82,8 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     keyPressMsg    BYTE "Press any key to return to menu...", 0
     returnMsg      BYTE "Press any key to return...", 0
     
+    ; debug msgs
+    debugStr       BYTE "Ghost directions: ", 0
 
 .code
 INCLUDE level1.inc
