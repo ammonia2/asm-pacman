@@ -32,6 +32,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ghostRow       DWORD ?
     ghostCol       DWORD ?
     currDist       DWORD 99999
+    ghostSpeed     DWORD 5
     originalTiles  BYTE 10 DUP(0)
     ghostDirection BYTE 10 DUP(0)
     possibleDirs   BYTE 4 DUP(0)

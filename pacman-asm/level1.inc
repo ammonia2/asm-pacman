@@ -121,6 +121,7 @@ initialiseLevel1 ENDP
 
 
 initialiseLevel1Ghosts PROC uses esi eax ebx ecx
+    mov ghostSpeed, 5
     ; 3 Ghosts for Level 1
     mov esi, 0 ; ghost count
     mov numGhosts, 3
@@ -168,7 +169,6 @@ getGridValGhost PROC uses eax ebx ecx esi
     imul ebx, GRID_WIDTH
     mov ecx, ghostCol
     add ebx, ecx
-    ;movzx si, bl
     mov al, GRID[ebx]
     mov gridVal, al
 
@@ -223,7 +223,6 @@ storeEmptyCharGhostL1 PROC uses ebx ecx
     imul ebx, GRID_WIDTH
     mov ecx, ghostCol
     add ebx, ecx
-    ; Use the full ebx register, not just bl
     mov GRID[ebx], 20h
     ret
 storeEmptyCharGhostL1 ENDP
@@ -273,8 +272,10 @@ playLevel1 PROC
     call Clrscr
     call drawLevel1
 
+    mov ecx, 0 ; for ghosts movement speed
     inputLoop_L1:
-        call ReadChar
+        call ReadKey
+        jz noInput_L1
 
         cmp al, 77h ; lowercase 'w'
         jnz inputCheck2_L1
@@ -295,7 +296,7 @@ playLevel1 PROC
     revertMoveUp_L1:
         add pacmanRow, 1
         call storePacmanL1
-        jmp invalidInput_L1
+        jmp noInput_L1
 
     inputCheck2_L1:
         cmp al, 61h ; lowercase 'a'
@@ -317,7 +318,7 @@ playLevel1 PROC
     revertMoveLeft_L1:
         add pacmanCol, 1
         call storePacmanL1
-        jmp invalidInput_L1
+        jmp noInput_L1
 
     inputCheck3_L1:
         cmp al, 73h ; lowercase 's'
@@ -339,11 +340,11 @@ playLevel1 PROC
     revertMoveDown_L1:
         sub pacmanRow, 1
         call storePacmanL1
-        jmp invalidInput_L1
+        jmp noInput_L1
 
     inputCheck4_L1:
         cmp al, 64h ; lowercase 'd'
-        jnz invalidInput_L1
+        jnz noInput_L1
 
         call storeEmptyCharL1
         add pacmanCol, 1
@@ -361,7 +362,7 @@ playLevel1 PROC
     revertMoveRight_L1:
         sub pacmanCol, 1
         call storePacmanL1
-        jmp invalidInput_L1
+        jmp noInput_L1
 
         ; input processing
     inputDone_L1:
@@ -373,12 +374,23 @@ playLevel1 PROC
 
     skipScoreUpdate_L1:
         call storePacmanL1
-        
-        call Clrscr
-        call drawLevel1 ; using updated grid
 
-    invalidInput_L1:
+    noInput_L1:
+
+        inc ecx
+        cmp ecx, ghostSpeed ; speed: every 5 iterations
+        jb skipGhostMove_L1
+        
+        mov ecx, 0
         call moveGhosts_L1
+
+    skipGhostMove_L1:
+        call Clrscr
+        call drawLevel1
+
+        mov eax, 50
+        call Delay
+
         jmp inputLoop_L1
 
     ret
@@ -448,7 +460,7 @@ getDirections_L1 PROC uses edx esi
         ret
 getDirections_L1 ENDP
 
-
+; debugging proc
 printPossibleDirns PROC uses ecx esi edx
     mov ecx, eax
     mov edx, OFFSET debugStr2
@@ -477,7 +489,6 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
         mov ebx, ghosts[esi + type ghosts]
         call getDirections_L1  ; Stores all possible directions in possibleDirs
         mov edx, eax    ; Number of directions
-        call printPossibleDirns
 
         ; Calculate distances & select a direction
         mov edi, 0
