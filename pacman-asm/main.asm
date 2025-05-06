@@ -32,9 +32,9 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ghostRow       DWORD ?
     ghostCol       DWORD ?
     currDist       DWORD 99999
-    originalTiles BYTE 10 DUP(0)
-    ghostDirection BYTE 3 DUP(0)  ; Direction for each ghost (up to 3)
-    possibleDirs   BYTE 4 DUP(0)  ; Array to hold valid directions
+    originalTiles  BYTE 10 DUP(0)
+    ghostDirection BYTE 10 DUP(0)
+    possibleDirs   BYTE 4 DUP(0)
 
 
     ; Grid data
@@ -84,6 +84,8 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     
     ; debug msgs
     debugStr       BYTE "Ghost directions: ", 0
+    debugStr2      BYTE "Possible directions: ", 0
+    comma          BYTE ", ", 0
 
 .code
 INCLUDE level1.inc
@@ -136,28 +138,32 @@ calculateDistance PROC uses ecx edx esi edi
     mov edx, pacmanCol
     
     ; row distance
-    .IF eax >= ecx
-        mov esi, eax
-        sub esi, ecx
-    .ELSE
+    cmp eax, ecx
+    jl row_less
+    mov esi, eax
+    sub esi, ecx
+    jmp col_dist
+
+    row_less:
         mov esi, ecx
         sub esi, eax
-    .ENDIF
     
-    ; column distance
-    .IF ebx >= edx
+    col_dist:
+        ; column distance
+        cmp ebx, edx
+        jl col_less
         mov edi, ebx
         sub edi, edx
-    .ELSE
+        jmp calc_final
+    col_less:
         mov edi, edx
         sub edi, ebx
-    .ENDIF
     
-    ; Calculate Manhattan distance (row distance + column distance)
-    mov eax, esi
-    add eax, edi
+    calc_final:
+        ; Manhattan distance (row distance + column distance)
+        mov eax, esi
+        add eax, edi ; final result
     
-    ; Store final result in eax
     ret
 calculateDistance ENDP
 

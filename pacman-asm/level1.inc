@@ -141,7 +141,7 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
         mov ghostCol, ecx
 
         ; inspect grid to confirm availability
-        call getGridVal2
+        call getGridValGhost
         mov al, gridVal
 
         cmp al, '.'
@@ -151,28 +151,29 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
 
         mov eax, ghostRow
         mov ghosts[esi], eax
-        mov ghosts[esi + 1], ecx
+        mov eax, ghostCol
+        mov ghosts[esi + type ghosts], eax
         call storeGhost_L1
 
-        add esi, 2
+        add esi, 2 * type ghosts
 
-        cmp esi, 6
+        cmp esi, 6 * type ghosts
         jnz ghostInit
 
     ret
 initialiseLevel1Ghosts ENDP
 
-getGridVal2 PROC uses eax ebx ecx esi
+getGridValGhost PROC uses eax ebx ecx esi
     mov ebx, ghostRow
     imul ebx, GRID_WIDTH
     mov ecx, ghostCol
     add ebx, ecx
-    movzx si, bl
-    mov al, GRID[si]
+    ;movzx si, bl
+    mov al, GRID[ebx]
     mov gridVal, al
 
     ret
-getGridVal2 ENDP
+getGridValGhost ENDP
 
 storeGhost_L1 PROC uses eax ebx ecx
     mov ebx, ghostRow
@@ -388,12 +389,12 @@ getDirections_L1 PROC uses edx esi
     mov esi, 0
     mov edx, eax
     ; UP
-    cmp edx, 0
-    jle downCheck_l1
+    ;cmp edx, 0
+    ;jle downCheck_l1
     mov ghostRow, edx
     dec ghostRow
     mov ghostCol, ebx
-    call getGridVal2
+    call getGridValGhost
     mov al, gridVal
     cmp al, wallChar ; Only check if it's not a wall
     je downCheck_l1
@@ -402,42 +403,42 @@ getDirections_L1 PROC uses edx esi
 
     downCheck_l1:
         ; DOWN
-        cmp edx, GRID_HEIGHT-1
-        jae leftCheck_l1
+        ;cmp edx, GRID_HEIGHT-1
+        ;jae leftCheck_l1
         mov ghostRow, edx
         inc ghostRow
         mov ghostCol, ebx
-        call getGridVal2
+        call getGridValGhost
         mov al, gridVal
-        cmp al, wallChar ; Only check if it's not a wall
+        cmp al, wallChar
         je leftCheck_l1
         mov possibleDirs[esi], DOWN
         inc esi
 
     leftCheck_l1:
         ; LEFT
-        cmp ebx, 0
-        jle rightCheck_l1
+        ;cmp ebx, 0
+        ;jle rightCheck_l1
         mov ghostRow, edx
         mov ghostCol, ebx
         dec ghostCol
-        call getGridVal2
+        call getGridValGhost
         mov al, gridVal
-        cmp al, wallChar ; Only check if it's not a wall
+        cmp al, wallChar
         je rightCheck_l1
         mov possibleDirs[esi], LEFT
         inc esi
 
     rightCheck_l1:
         ; RIGHT
-        cmp ebx, GRID_WIDTH-1
-        jae doneCheck_l1
+        ;cmp ebx, GRID_WIDTH-1
+        ;jae doneCheck_l1
         mov ghostRow, edx
         mov ghostCol, ebx
         inc ghostCol
-        call getGridVal2
+        call getGridValGhost
         mov al, gridVal
-        cmp al, wallChar ; Only check if it's not a wall
+        cmp al, wallChar
         je doneCheck_l1
         mov possibleDirs[esi], RIGHT
         inc esi
@@ -448,89 +449,124 @@ getDirections_L1 PROC uses edx esi
 getDirections_L1 ENDP
 
 
-moveGhosts_L1 PROC uses ecx esi eax ebx
-    mov edx, OFFSET debugStr  ; "Ghost directions: "
-    call WriteString
+printPossibleDirns PROC uses ecx esi edx
+    mov ecx, eax
+    mov edx, OFFSET debugStr2
+    call writestring
 
+    mov esi, 0
+    lup:
+        mov al, possibleDirs[esi]
+        call writeint
+        mov edx, OFFSET comma
+        call writestring
+        inc esi
+        loop lup
+
+    call Crlf
+    ret
+printPossibleDirns ENDP
+
+
+moveGhosts_L1 PROC uses ecx esi eax ebx
     mov ecx, 0
     mov esi, 0
     ghostLoop_L1:
         mov currDist, 0FFFFFFFFh
-        movzx eax, byte ptr ghosts[esi]
-        movzx ebx, byte ptr ghosts[esi + 1]
+        mov eax, ghosts[esi]
+        mov ebx, ghosts[esi + type ghosts]
         call getDirections_L1  ; Stores all possible directions in possibleDirs
         mov edx, eax    ; Number of directions
+        call printPossibleDirns
 
         ; Calculate distances & select a direction
         mov edi, 0
         selectDirection_l1:
-            movzx eax, byte ptr ghosts[esi]
-            movzx ebx, byte ptr ghosts[esi + 1]
+            mov eax, ghosts[esi]
+            mov ebx, ghosts[esi + type ghosts]
+            
+            cmp possibleDirs[edi], UP
+            jne check_DOWN
+            sub eax, 1
+            jmp calc_dist
 
-            .IF possibleDirs[edi] == UP
-                sub eax, 1
-            .ELSEIF possibleDirs[edi] == DOWN
-                add eax, 1
-            .ELSEIF possibleDirs[edi] == LEFT
-                sub ebx, 1
-            .ELSEIF possibleDirs[edi] == RIGHT
-                add ebx, 1
-            .ENDIF
+        check_DOWN:
+            cmp possibleDirs[edi], DOWN
+            jne check_LEFT
+            add eax, 1
+            jmp calc_dist
 
+        check_LEFT:
+            cmp possibleDirs[edi], LEFT
+            jne check_RIGHT
+            sub ebx, 1
+            jmp calc_dist
+
+        check_RIGHT:
+            cmp possibleDirs[edi], RIGHT
+            jne calc_dist
+            add ebx, 1
+            
+        calc_dist:
             CALL calculateDistance
             cmp eax, currDist
             JAE skipUpdateDirn_l1
-
             mov bl, possibleDirs[edi]
             mov ghostDirection[ecx], bl
             mov currDist, eax
 
-            skipUpdateDirn_l1:
-                inc edi
-                cmp edi, edx
-                jnz selectDirection_l1
+        skipUpdateDirn_l1:
+            inc edi
+            cmp edi, edx
+            jnz selectDirection_l1
+
 
         ; Use ghostDirection to now move ghost position
-        ; After selecting a direction for a ghost
-        movzx eax, ghostDirection[ecx]
-        call WriteInt
-        mov al, ' '
-        call WriteChar
-
+        
         ; Clear previous position:
-        movzx eax, byte ptr ghosts[esi]    ; Reload ghostRow (8-bit) into eax
-        movzx ebx, byte ptr ghosts[esi + 1]; Reload ghostCol (8-bit) into ebx
+        mov eax, ghosts[esi]
+        mov ebx, ghosts[esi + type ghosts]
         mov ghostRow, eax
         mov ghostCol, ebx
         CALL storeEmptyCharGhostL1
-
         
-        movzx eax, byte ptr ghosts[esi]
-        movzx ebx, byte ptr ghosts[esi + 1]
+        mov eax, ghosts[esi]
+        mov ebx, ghosts[esi + type ghosts]
+        movzx edx, ghostDirection[ecx]
+        
+        cmp edx, UP
+        jne check_DOWN_move
+        sub ghosts[esi], 1
+        jmp store_ghost
 
-        movzx edx, ghostDirection[ecx]     ; Get best direction
-        .IF edx == UP
-            sub byte ptr ghosts[esi], 1
-        .ELSEIF edx == DOWN
-            add byte ptr ghosts[esi], 1
-        .ELSEIF edx == LEFT
-            sub byte ptr ghosts[esi + 1], 1
-        .ELSEIF edx == RIGHT
-            add byte ptr ghosts[esi + 1], 1
-        .ENDIF
+    check_DOWN_move:
+        cmp edx, DOWN
+        jne check_LEFT_move
+        add ghosts[esi], 1
+        jmp store_ghost
 
+    check_LEFT_move:
+        cmp edx, LEFT
+        jne check_RIGHT_move
+        sub ghosts[esi + type ghosts], 1
+        jmp store_ghost
+
+    check_RIGHT_move:
+        cmp edx, RIGHT
+        jne store_ghost
+        add ghosts[esi + type ghosts], 1
+        
+    store_ghost:
         ; Store ghost at new position
-        movzx eax, byte ptr ghosts[esi]    ; Get updated ghostRow
-        movzx ebx, byte ptr ghosts[esi + 1]; Get updated ghostCol
+        mov eax, ghosts[esi]
+        mov ebx, ghosts[esi + type ghosts]
         mov ghostRow, eax 
         mov ghostCol, ebx
         CALL storeGhost_L1
-
-        add esi, 2
+        add esi, 2 * type ghosts
         inc ecx
         cmp cl, numGhosts
         jnz ghostLoop_L1
     
-        call Crlf
     ret
 moveGhosts_L1 ENDP
