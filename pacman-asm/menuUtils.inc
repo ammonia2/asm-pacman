@@ -9,58 +9,58 @@ MenuLoop PROC
         call DisplayHomeScreen
         jmp menu_input
         
-    check_menu_levels:
-        cmp eax, MENU_LEVELS
-        jne check_menu_instr
-        call DisplayLevelSelect
-        jmp menu_input
+        check_menu_levels:
+            cmp eax, MENU_LEVELS
+            jne check_menu_instr
+            call DisplayLevelSelect
+            jmp menu_input
         
-    check_menu_instr:
-        cmp eax, MENU_INSTR
-        jne check_menu_scores
-        call DisplayInstructions
-        jmp menu_input
+        check_menu_instr:
+            cmp eax, MENU_INSTR
+            jne check_menu_scores
+            call DisplayInstructions
+            jmp menu_input
         
-    check_menu_scores:
-        cmp eax, MENU_SCORES
-        jne check_menu_game
-        call DisplayHighScores
-        jmp menu_input
+        check_menu_scores:
+            cmp eax, MENU_SCORES
+            jne check_menu_game
+            call DisplayHighScores
+            jmp menu_input
         
-    check_menu_game:
-        cmp eax, MENU_GAME
-        jne menu_input
-        call StartGame
+        check_menu_game:
+            cmp eax, MENU_GAME
+            jne menu_input
+            call StartGame
         
-    menu_input:
-        ; menu navigation
-        mov al, 0
-        call ReadChar
+        menu_input:
+            ; menu navigation
+            mov al, 0
+            call ReadChar
         
-        mov ebx, currentMenu
-        cmp ebx, MENU_HOME
-        jne check_input_levels
-        call HandleHomeInput
-        jmp check_exit
+            mov ebx, currentMenu
+            cmp ebx, MENU_HOME
+            jne check_input_levels
+            call HandleHomeInput
+            jmp check_exit
         
-    check_input_levels:
-        cmp ebx, MENU_LEVELS
-        jne check_input_others
-        call HandleLevelInput
-        jmp check_exit
+        check_input_levels:
+            cmp ebx, MENU_LEVELS
+            jne check_input_others
+            call HandleLevelInput
+            jmp check_exit
         
-    check_input_others:
-        cmp ebx, MENU_INSTR
-        je set_home_menu
-        cmp ebx, MENU_SCORES
-        jne check_exit
+        check_input_others:
+            cmp ebx, MENU_INSTR
+            je set_home_menu
+            cmp ebx, MENU_SCORES
+            jne check_exit
         
-    set_home_menu:
-        mov currentMenu, MENU_HOME ; any key to get back to menu
+        set_home_menu:
+            mov currentMenu, MENU_HOME ; any key to get back to menu
         
-    check_exit:
-        cmp al, 27    ; ESC to exit
-        jne menuLoop_start
+        check_exit:
+            cmp al, 27    ; ESC to exit
+            jne menuLoop_start
     
     ret
 MenuLoop ENDP
@@ -103,16 +103,16 @@ DisplayHomeScreen PROC
     call ReadString
     jmp display_menu
     
-display_welcome:
-    ; Display welcome back message
-    mov edx, OFFSET playerName
-    call WriteString
-    call Crlf
+    display_welcome:
+        ; Display welcome back message
+        mov edx, OFFSET playerName
+        call WriteString
+        call Crlf
     
-display_menu:
-    call Crlf
-    mov edx, OFFSET menuPrompt
-    call WriteString
+    display_menu:
+        call Crlf
+        mov edx, OFFSET menuPrompt
+        call WriteString
     
     ret
 DisplayHomeScreen ENDP
@@ -123,19 +123,19 @@ HandleHomeInput PROC
     mov currentMenu, MENU_LEVELS
     jmp handle_home_done
     
-check_option2:
-    cmp al, '2'
-    jne check_option3
-    mov currentMenu, MENU_INSTR
-    jmp handle_home_done
+    check_option2:
+        cmp al, '2'
+        jne check_option3
+        mov currentMenu, MENU_INSTR
+        jmp handle_home_done
     
-check_option3:
-    cmp al, '3'
-    jne handle_home_done
-    mov currentMenu, MENU_SCORES
+    check_option3:
+        cmp al, '3'
+        jne handle_home_done
+        mov currentMenu, MENU_SCORES
     
-handle_home_done:
-    ret
+    handle_home_done:
+        ret
 HandleHomeInput ENDP
 
 DisplayLevelSelect PROC
@@ -165,14 +165,14 @@ HandleLevelInput PROC
     mov currentMenu, MENU_GAME
     jmp handle_level_done
     
-check_esc_key:
-    cmp al, 27    ; ESC
-    jne handle_level_done
-    ; Return to home menu
-    mov currentMenu, MENU_HOME
+    check_esc_key:
+        cmp al, 27    ; ESC
+        jne handle_level_done
+        ; Return to home menu
+        mov currentMenu, MENU_HOME
     
-handle_level_done:
-    ret
+    handle_level_done:
+        ret
 HandleLevelInput ENDP
 
 DisplayInstructions PROC

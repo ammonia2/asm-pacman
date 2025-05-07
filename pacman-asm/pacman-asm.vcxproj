@@ -24,6 +24,7 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
+    <None Include="initialisations.inc" />
     <None Include="level1.inc" />
     <None Include="menuUtils.inc" />
   </ItemGroup>

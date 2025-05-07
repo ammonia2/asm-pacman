@@ -6,6 +6,7 @@
   <ItemGroup>
     <None Include="menuUtils.inc" />
     <None Include="level1.inc" />
+    <None Include="initialisations.inc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="highscore.txt" />

@@ -94,6 +94,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 .code
 INCLUDE level1.inc
 INCLUDE menuUtils.inc
+INCLUDE initialisations.inc
 
 main PROC
     CALL Randomize
