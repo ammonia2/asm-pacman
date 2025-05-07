@@ -33,6 +33,8 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ghostCol       DWORD ?
     currDist       DWORD 99999
     ghostSpeed     DWORD 5
+    speedCounter   DWORD 0
+    ghostCollision BYTE 0
     originalTiles  BYTE 10 DUP(0)
     ghostDirection BYTE 10 DUP(0)
     possibleDirs   BYTE 4 DUP(0)
@@ -86,6 +88,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ; debug msgs
     debugStr       BYTE "Ghost directions: ", 0
     debugStr2      BYTE "Possible directions: ", 0
+    debugStr3      BYTE "Debug before readKey: ", 0
     comma          BYTE ", ", 0
 
 .code
@@ -131,6 +134,29 @@ generateRandomNumber PROC uses eax ebx ecx esi edi
 
     ret
 generateRandomNumber ENDP
+
+getGridValGhost PROC uses eax ebx ecx esi
+    mov ebx, ghostRow
+    imul ebx, GRID_WIDTH
+    mov ecx, ghostCol
+    add ebx, ecx
+    mov al, GRID[ebx]
+    mov gridVal, al
+
+    ret
+getGridValGhost ENDP
+
+getGridVal PROC uses eax ebx ecx
+    mov ebx, pacmanRow
+    imul ebx, GRID_WIDTH
+    mov ecx, pacmanCol
+    add ebx, ecx
+    mov al, GRID[ebx]
+    mov gridVal, al
+
+    ret
+getGridVal ENDP
+
 
 ; calculates distance ghost -> PACMAN
 calculateDistance PROC uses ecx edx esi edi

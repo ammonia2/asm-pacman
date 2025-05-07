@@ -164,17 +164,6 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
     ret
 initialiseLevel1Ghosts ENDP
 
-getGridValGhost PROC uses eax ebx ecx esi
-    mov ebx, ghostRow
-    imul ebx, GRID_WIDTH
-    mov ecx, ghostCol
-    add ebx, ecx
-    mov al, GRID[ebx]
-    mov gridVal, al
-
-    ret
-getGridValGhost ENDP
-
 storeGhost_L1 PROC uses eax ebx ecx
     mov ebx, ghostRow
     imul ebx, GRID_WIDTH
@@ -185,17 +174,6 @@ storeGhost_L1 PROC uses eax ebx ecx
 
     ret
 storeGhost_L1 ENDP
-
-getGridVal PROC uses eax ebx ecx
-    mov ebx, pacmanRow
-    imul ebx, GRID_WIDTH
-    mov ecx, pacmanCol
-    add ebx, ecx
-    mov al, GRID[ebx]
-    mov gridVal, al
-
-    ret
-getGridVal ENDP
 
 storePacmanL1 PROC uses ebx ecx
     mov ebx, pacmanRow
@@ -272,8 +250,9 @@ playLevel1 PROC
     call Clrscr
     call drawLevel1
 
-    mov ecx, 0 ; for ghosts movement speed
+    mov speedCounter, 0 ; for ghosts movement speed
     inputLoop_L1:
+        mov edx, ecx
         call ReadKey
         jz noInput_L1
 
@@ -376,13 +355,15 @@ playLevel1 PROC
         call storePacmanL1
 
     noInput_L1:
-
-        inc ecx
-        cmp ecx, ghostSpeed ; speed: every 5 iterations
+        inc speedCounter
+        mov eax, speedCounter
+        cmp eax, ghostSpeed ; speed: every 5 iterations
         jb skipGhostMove_L1
         
-        mov ecx, 0
+        mov speedCounter, 0
         call moveGhosts_L1
+        cmp ghostCollision, 1
+        JE level1Finished
 
     skipGhostMove_L1:
         call Clrscr
@@ -393,7 +374,8 @@ playLevel1 PROC
 
         jmp inputLoop_L1
 
-    ret
+    level1Finished:
+        ret
 playLevel1 ENDP
 
 
@@ -401,8 +383,6 @@ getDirections_L1 PROC uses edx esi
     mov esi, 0
     mov edx, eax
     ; UP
-    ;cmp edx, 0
-    ;jle downCheck_l1
     mov ghostRow, edx
     dec ghostRow
     mov ghostCol, ebx
@@ -415,8 +395,6 @@ getDirections_L1 PROC uses edx esi
 
     downCheck_l1:
         ; DOWN
-        ;cmp edx, GRID_HEIGHT-1
-        ;jae leftCheck_l1
         mov ghostRow, edx
         inc ghostRow
         mov ghostCol, ebx
@@ -429,8 +407,6 @@ getDirections_L1 PROC uses edx esi
 
     leftCheck_l1:
         ; LEFT
-        ;cmp ebx, 0
-        ;jle rightCheck_l1
         mov ghostRow, edx
         mov ghostCol, ebx
         dec ghostCol
@@ -443,8 +419,6 @@ getDirections_L1 PROC uses edx esi
 
     rightCheck_l1:
         ; RIGHT
-        ;cmp ebx, GRID_WIDTH-1
-        ;jae doneCheck_l1
         mov ghostRow, edx
         mov ghostCol, ebx
         inc ghostCol
@@ -573,11 +547,23 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
         mov ebx, ghosts[esi + type ghosts]
         mov ghostRow, eax 
         mov ghostCol, ebx
+
+        CALL getGridValGhost
+        mov al, gridVal
+        cmp al, PACMAN
+        JNE skipCollisionSet_L1
+        mov ghostCollision, 1
         CALL storeGhost_L1
+        jmp ghostDone_L1
+
+        skipCollisionSet_L1:
+            CALL storeGhost_L1
+
         add esi, 2 * type ghosts
         inc ecx
         cmp cl, numGhosts
         jnz ghostLoop_L1
     
-    ret
+    ghostDone_L1:
+        ret
 moveGhosts_L1 ENDP
