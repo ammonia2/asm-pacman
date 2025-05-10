@@ -1,8 +1,11 @@
 initialiseLevel1Ghosts PROC uses esi eax ebx ecx
+    LOCAL ghostCounter:DWORD
+
     mov ghostSpeed, 5
     ; 3 Ghosts for Level 1
     mov esi, 0 ; ghost count
     mov numGhosts, 3
+    mov ghostCounter, 0
     
     ghostInit:
         ; ghostRow
@@ -26,15 +29,15 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
         cmp al, '.'
         jnz ghostInit
 
-        ; mov originalTiles[ecx], al 
-
         mov eax, ghostRow
         mov ghosts[esi], eax
         mov eax, ghostCol
         mov ghosts[esi + type ghosts], eax
+        mov edx, ghostCounter
         call storeGhost_L1
 
         add esi, 2 * type ghosts
+        inc ghostCounter
 
         cmp esi, 6 * type ghosts
         jnz ghostInit
@@ -48,7 +51,15 @@ storeGhost_L1 PROC uses eax ebx ecx
     mov ecx, ghostCol
     add ebx, ecx
     mov al, GHOST
+    mov cl, GRID[ebx] ; store prev char
     mov GRID[ebx], al
+
+    cmp cl, 'G'
+    jz skipTileSaveL1
+
+    mov originalTiles[edx], cl
+
+    skipTileSaveL1:
 
     ret
 storeGhost_L1 ENDP
@@ -74,14 +85,15 @@ storeEmptyCharL1 PROC uses ebx ecx
     ret
 storeEmptyCharL1 ENDP
 
-storeEmptyCharGhostL1 PROC uses ebx ecx
+storeGhostPrevL1 PROC uses ebx ecx
     mov ebx, ghostRow
     imul ebx, GRID_WIDTH
     mov ecx, ghostCol
     add ebx, ecx
-    mov GRID[ebx], 20h
+    mov cl, originalTiles[edx]
+    mov GRID[ebx], cl
     ret
-storeEmptyCharGhostL1 ENDP
+storeGhostPrevL1 ENDP
 
 drawLevel1 PROC
     ; curr score
@@ -332,8 +344,9 @@ printPossibleDirns ENDP
 
 
 moveGhosts_L1 PROC uses ecx esi eax ebx
-    mov ecx, 0
+    mov ecx, 0 ; ghostCounter 
     mov esi, 0
+
     ghostLoop_L1:
         mov currDist, 0FFFFFFFFh
         mov eax, ghosts[esi]
@@ -383,23 +396,25 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
             jnz selectDirection_l1
 
 
-        ; Use ghostDirection to now move ghost position
+    ; Use ghostDirection to now move ghost position
         
-        ; Clear previous position:
-        mov eax, ghosts[esi]
-        mov ebx, ghosts[esi + type ghosts]
-        mov ghostRow, eax
-        mov ghostCol, ebx
-        CALL storeEmptyCharGhostL1
+    ; Clear previous position:
+    mov eax, ghosts[esi]
+    mov ebx, ghosts[esi + type ghosts]
+    mov ghostRow, eax
+    mov ghostCol, ebx
+    
+    mov edx, ecx
+    CALL storeGhostPrevL1
+
+    mov eax, ghosts[esi]
+    mov ebx, ghosts[esi + type ghosts]
+    movzx edx, ghostDirection[ecx]
         
-        mov eax, ghosts[esi]
-        mov ebx, ghosts[esi + type ghosts]
-        movzx edx, ghostDirection[ecx]
-        
-        cmp edx, UP
-        jne check_DOWN_move
-        sub ghosts[esi], 1
-        jmp store_ghost
+    cmp edx, UP
+    jne check_DOWN_move
+    sub ghosts[esi], 1
+    jmp store_ghost
 
     check_DOWN_move:
         cmp edx, DOWN
@@ -434,6 +449,7 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
         jmp ghostDone_L1
 
         skipCollisionSet_L1:
+            mov edx, ecx
             CALL storeGhost_L1
 
         add esi, 2 * type ghosts
