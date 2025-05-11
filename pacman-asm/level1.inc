@@ -7,7 +7,7 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
     mov numGhosts, 3  ; 3 Ghosts for Level 1
     mov esi, 0 ; ghost count
     
-    ghostInit:
+    ghostInitL1:
         ; ghostRow
         mov maxValue, GRID_HEIGHT - 3
         mov minValue, 3
@@ -27,7 +27,7 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
         mov al, gridVal
 
         cmp al, '.'
-        jnz ghostInit
+        jnz ghostInitL1
 
         mov eax, ghostRow
         mov ghosts[esi], eax
@@ -40,7 +40,7 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
         inc ghostCounter
 
         cmp esi, 6 * type ghosts
-        jnz ghostInit
+        jnz ghostInitL1
 
     ret
 initialiseLevel1Ghosts ENDP

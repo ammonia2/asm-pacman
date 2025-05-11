@@ -74,15 +74,168 @@ StartGame PROC
     call WriteDec
     call Crlf
     
+    cmp selectedLevel, 1
+    JNZ checkLevel2
     call startLevel1
-    mov edx, OFFSET keyPressMsg
-    call WriteString
-    call ReadChar
+    jmp doneLevelCheck
+
+    checkLevel2:
+        cmp selectedLevel, 2
+        JNZ checkLevel3
+        call startLevel2
+        jmp doneLevelCheck
+
+    checkLevel3:
+        cmp selectedLevel, 3
+        JNZ doneLevelCheck
+        JNZ checkLevel3
+        call startLevel3
+
+    doneLevelCheck:
+        ; save highscore here!!!
+        call saveHighScore
+        mov edx, OFFSET keyPressMsg
+        call WriteString
+        call ReadChar
     
-    ; TODO: level init
     mov currentMenu, MENU_HOME
     ret
 StartGame ENDP
+
+saveHighScore PROC
+    mov edx, OFFSET scoreFile
+    call openInputFile
+    mov handler, eax
+    
+    cmp eax, INVALID_HANDLE_VALUE
+    jne fileOpened
+    
+    ; If file doesn't exist, create it
+    mov edx, OFFSET scoreFile
+    call CreateOutputFile
+    mov handler, eax
+    jmp formatNewScore
+    
+    fileOpened:
+        ; Read the existing scores into buffer
+        mov edx, OFFSET buffer
+        mov ecx, buffsize
+        call readFromFile
+        mov bytesRead, eax
+    
+        ; Close the input file
+        mov eax, handler
+        call closeFile
+    
+        ; Reopen file for writing
+        mov edx, OFFSET scoreFile
+        call CreateOutputFile
+        mov handler, eax
+    
+        ; Write the original data back first
+        mov edx, OFFSET buffer
+        mov ecx, bytesRead
+        call WriteToFile
+    
+    formatNewScore:
+        mov edi, OFFSET tempBuffer
+        mov esi, OFFSET playerName
+    
+    copyPlayerName:
+        mov al, [esi]
+        cmp al, 0
+        je nameEnd
+        mov [edi], al
+        inc esi
+        inc edi
+        jmp copyPlayerName
+    
+    nameEnd:
+        ; Add ": " after name
+        mov al, ':'
+        mov [edi], al
+        inc edi
+        mov al, ' '
+        mov [edi], al
+        inc edi
+    
+        ; Convert score to string
+        mov eax, currentScore
+        call WriteToStr
+    
+        ; Add newline
+        mov al, 13
+        mov [edi], al
+        inc edi
+        mov al, 10
+        mov [edi], al
+        inc edi
+        mov al, 0
+        mov [edi], al
+    
+        ; Calculate length of formatted string
+        mov edi, OFFSET tempBuffer
+        mov ecx, 0
+    calculateLength:
+        mov al, [edi + ecx]
+        cmp al, 0
+        je lengthFound
+        inc ecx
+        jmp calculateLength
+    
+    lengthFound:
+        push ecx
+
+        mov eax, handler
+        mov edx, OFFSET crlfString
+        mov ecx, 2
+        call WriteToFile
+
+        pop ecx
+        mov edx, OFFSET tempBuffer
+        mov eax, handler
+        call WriteToFile
+    
+        ; Close the file
+        mov eax, handler
+        call closeFile
+    
+    ret
+saveHighScore ENDP
+
+WriteToStr PROC uses eax ecx ebx edx  
+    mov ebx, 10         ; divisor
+    mov ecx, 0          ; count digits
+    
+    ; Special case for zero
+    test eax, eax
+    jnz notZero
+    mov BYTE PTR [edi], '0'
+    inc edi
+    jmp writeEnd
+    
+    notZero:
+    convertLoop:
+        mov edx, 0 
+        div ebx
+        push edx            ; save remainder
+        inc ecx
+        test eax, eax       ; check if done
+        jnz convertLoop
+    
+        ; Now pop digits in correct order
+    popLoop:
+        pop edx
+        add edx, '0'        ; convert to ASCII
+        mov [edi], dl       ; store in buffer
+        inc edi
+        loop popLoop
+    
+    writeEnd:
+        mov BYTE PTR [edi], 0    ; null terminator
+    
+    ret
+WriteToStr ENDP
 
 DisplayHomeScreen PROC
     mov edx, OFFSET titleArt
@@ -150,10 +303,10 @@ DisplayLevelSelect PROC
 DisplayLevelSelect ENDP
 
 HandleLevelInput PROC
-    ; Check if input is between '1' and '5'
+    ; Check if input is between '1' and '3'
     cmp al, '1'
     jb check_esc_key
-    cmp al, '5'
+    cmp al, '3'
     ja check_esc_key
     
     ; Convert ASCII to number (subtract '0')

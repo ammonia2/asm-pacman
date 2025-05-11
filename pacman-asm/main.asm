@@ -56,6 +56,9 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     scoreFile      BYTE "highscore.txt", 0
     handler        HANDLE ?
     buffer         BYTE buffsize DUP(?)
+    tempBuffer     BYTE 256 DUP(0)
+    bytesRead      DWORD 0
+    crlfString     BYTE 13, 10, 0
 
     ; Player data
     playerName     BYTE 31 DUP(0)
@@ -75,7 +78,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
                    BYTE "=================================================", 0Dh, 0Ah, 0
 
     namePrompt     BYTE "Enter your name: ", 0
-    levelPrompt    BYTE "Select level (1-5): ", 0
+    levelPrompt    BYTE "Select level (1-3): ", 0
     instructTitle  BYTE "INSTRUCTIONS", 0Dh, 0Ah, 0
     instructText   BYTE "Use arrow keys to move Pacman.", 0Dh, 0Ah
                    BYTE "Eat all dots while avoiding ghosts.", 0Dh, 0Ah
@@ -98,6 +101,7 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 INCLUDE level1.inc
 INCLUDE menuUtils.inc
 INCLUDE initialisations.inc
+INCLUDE level2.inc
 
 main PROC
     CALL Randomize
@@ -127,8 +131,37 @@ startLevel1 PROC
     call initialiseLevel1Ghosts
     call playLevel1
 
+    ; call saveHighScore
     ret
 startLevel1 ENDP
+
+startLevel2 PROC
+    call initialiseLevel2
+    
+    mov currentScore, 0
+    mov pacmanRow, 8
+    mov pacmanCol, 22
+    mov lives, 3
+
+    call initialiseLevel1Ghosts
+    call playLevel1
+
+    ret
+startLevel2 ENDP
+
+startLevel3 PROC
+    call initialiseLevel1
+    
+    mov currentScore, 0
+    mov pacmanRow, 8
+    mov pacmanCol, 22
+    mov lives, 3
+
+    call initialiseLevel1Ghosts
+    call playLevel1
+
+    ret
+startLevel3 ENDP
 
 generateRandomNumber PROC uses eax ebx ecx esi edi
     mov ebx, maxValue

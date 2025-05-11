@@ -26,6 +26,7 @@
   <ItemGroup>
     <None Include="initialisations.inc" />
     <None Include="level1.inc" />
+    <None Include="level2.inc" />
     <None Include="menuUtils.inc" />
   </ItemGroup>
   <ItemGroup>
