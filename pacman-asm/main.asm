@@ -60,7 +60,10 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     ; Player data
     playerName     BYTE 31 DUP(0)
     currentScore   DWORD 0
+    lives          DWORD 3
     scoreStr       BYTE "Current Score: ", 0
+    livesStr       BYTE "Lives: ", 0
+    clearingStr    BYTE "     ", 0
 
     ; Menu state
     currentMenu    DWORD MENU_HOME
@@ -115,6 +118,12 @@ InitializeGame ENDP
 
 startLevel1 PROC
     call initialiseLevel1
+    
+    mov currentScore, 0
+    mov pacmanRow, 8
+    mov pacmanCol, 22
+    mov lives, 3
+
     call initialiseLevel1Ghosts
     call playLevel1
 
@@ -164,10 +173,34 @@ displayScore PROC uses edx eax
     call Gotoxy
     mov edx, OFFSET scoreStr
     call writestring
+
+    mov dh, 0
+    mov dl, lengthof scoreStr - 1
+    CALL Gotoxy
     mov eax, currentScore
     call writeint
+
     ret
 displayScore ENDP
+
+displayLives PROC uses edx eax
+    mov dh, 0
+    mov dl, GRID_WIDTH*2 - 10
+    call Gotoxy
+
+    mov edx, OFFSET livesStr
+    call writestring
+    mov edx, OFFSET clearingStr
+    call writestring
+
+    mov dh, 0
+    mov dl, GRID_WIDTH*2 - 11 + lengthof livesStr
+    CALL Gotoxy
+    mov eax, lives
+    call writeint
+
+    ret
+displayLives ENDP
 
 ; calculates distance ghost -> PACMAN
 calculateDistance PROC uses ecx edx esi edi

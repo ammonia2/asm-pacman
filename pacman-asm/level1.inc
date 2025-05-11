@@ -1,11 +1,11 @@
 initialiseLevel1Ghosts PROC uses esi eax ebx ecx
     LOCAL ghostCounter:DWORD
 
-    mov ghostSpeed, 5
-    ; 3 Ghosts for Level 1
-    mov esi, 0 ; ghost count
-    mov numGhosts, 3
+    mov ghostCollision, 0
     mov ghostCounter, 0
+    mov ghostSpeed, 5
+    mov numGhosts, 3  ; 3 Ghosts for Level 1
+    mov esi, 0 ; ghost count
     
     ghostInit:
         ; ghostRow
@@ -56,8 +56,14 @@ storeGhost_L1 PROC uses eax ebx ecx
 
     cmp cl, 'G'
     jz skipTileSaveL1
+    cmp cl, 'P'
+    jz emptyTileSaveL1
 
     mov originalTiles[edx], cl
+    jmp skipTileSaveL1
+    
+    emptyTileSaveL1:
+        mov originalTiles[edx], 20h
 
     skipTileSaveL1:
 
@@ -131,11 +137,12 @@ storeGhostPrevL1 ENDP
 
 drawLevel1 PROC
     ; curr score
-    mov edx, OFFSET scoreStr
-    call writestring
-    mov eax, currentScore
-    call writeint
-    call Crlf
+    call displayScore
+    call displayLives
+
+    mov dh, 1
+    mov dl, 0
+    CALL Gotoxy
 
     mov ecx, GRID_HEIGHT * GRID_WIDTH
     mov ebx, 0
@@ -299,9 +306,26 @@ playLevel1 PROC
         jmp inputLoop_L1
 
     level1Finished:
-        mov dh, GRID_HEIGHT + 1
-        mov dl, 0
-        call Gotoxy
+        dec lives
+        CALL displayLives
+        cmp lives, 0
+        JNE resetPacman_L1
+        jmp finish_L1
+
+        resetPacman_L1:
+            CALL storeEmptyCharL1
+            mov pacmanRow, 8
+            mov pacmanCol, 22
+            CALL storePacmanL1
+
+            mov ghostCollision, 0
+            jmp inputLoop_L1
+
+        finish_L1:
+            mov dh, GRID_HEIGHT + 1
+            mov dl, 0
+            call Gotoxy
+
         ret
 playLevel1 ENDP
 
