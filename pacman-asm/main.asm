@@ -158,6 +158,16 @@ getGridVal PROC uses eax ebx ecx
     ret
 getGridVal ENDP
 
+displayScore PROC uses edx eax
+    mov dh, 0
+    mov dl, 0
+    call Gotoxy
+    mov edx, OFFSET scoreStr
+    call writestring
+    mov eax, currentScore
+    call writeint
+    ret
+displayScore ENDP
 
 ; calculates distance ghost -> PACMAN
 calculateDistance PROC uses ecx edx esi edi

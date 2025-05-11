@@ -61,6 +61,15 @@ storeGhost_L1 PROC uses eax ebx ecx
 
     skipTileSaveL1:
 
+    ; only redraw what's needed
+    mov dh, BYTE PTR ghostRow
+    add dh, 1
+    mov dl, BYTE PTR ghostCol
+    shl dl, 1
+    call Gotoxy
+    mov al, GHOST
+    call WriteChar
+
     ret
 storeGhost_L1 ENDP
 
@@ -72,6 +81,14 @@ storePacmanL1 PROC uses ebx ecx
     mov al, PACMAN
     mov GRID[ebx], al
 
+    mov dh, BYTE PTR pacmanRow
+    add dh, 1
+    mov dl, BYTE PTR pacmanCol
+    shl dl, 1
+    call Gotoxy
+    mov al, PACMAN
+    call WriteChar
+
     ret
 storePacmanL1 ENDP
 
@@ -81,6 +98,14 @@ storeEmptyCharL1 PROC uses ebx ecx
     mov ecx, pacmanCol
     add ebx, ecx
     mov GRID[ebx], 20h
+
+    mov dh, BYTE PTR pacmanRow
+    add dh, 1
+    mov dl, BYTE PTR pacmanCol
+    shl dl, 1
+    call Gotoxy
+    mov al, 20h
+    call WriteChar
 
     ret
 storeEmptyCharL1 ENDP
@@ -92,6 +117,15 @@ storeGhostPrevL1 PROC uses ebx ecx
     add ebx, ecx
     mov cl, originalTiles[edx]
     mov GRID[ebx], cl
+
+    mov dh, BYTE PTR ghostRow
+    add dh, 1
+    mov dl, BYTE PTR ghostCol
+    shl dl, 1
+    call Gotoxy
+    mov al, cl
+    call WriteChar
+
     ret
 storeGhostPrevL1 ENDP
 
@@ -239,6 +273,7 @@ playLevel1 PROC
         cmp gridVal, '.'
         jnz skipScoreUpdate_L1
         inc currentScore
+        call displayScore
 
     skipScoreUpdate_L1:
         call storePacmanL1
@@ -255,8 +290,8 @@ playLevel1 PROC
         JE level1Finished
 
     skipGhostMove_L1:
-        call Clrscr
-        call drawLevel1
+        ;call Clrscr
+        ;call drawLevel1
 
         mov eax, 50
         call Delay
@@ -264,6 +299,9 @@ playLevel1 PROC
         jmp inputLoop_L1
 
     level1Finished:
+        mov dh, GRID_HEIGHT + 1
+        mov dl, 0
+        call Gotoxy
         ret
 playLevel1 ENDP
 
