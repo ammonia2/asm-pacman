@@ -136,7 +136,7 @@ startLevel1 PROC
 startLevel1 ENDP
 
 startLevel2 PROC
-    call initialiseLevel1
+    call initialiseLevel2
     
     mov currentScore, 0
     mov pacmanRow, 8

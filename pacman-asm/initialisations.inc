@@ -447,7 +447,631 @@ initialiseLevel1 PROC
     ret
 initialiseLevel1 ENDP
 
+; Assume GRID_WIDTH, GRID_HEIGHT, pacmanRow, pacmanCol,
+; wallChar, dotChar, and GRID (with its type) are defined elsewhere.
 
 initialiseLevel2 PROC
+    mov ecx, GRID_HEIGHT
+    mov esi, -1         ; row counter (0 to GRID_HEIGHT-1)
+    mov ebx, 0          ; grid index
 
+    OuterLoopL2:
+        inc esi
+        push ecx            ; save OuterLoop counter
+        mov ecx, GRID_WIDTH
+        mov edi, -1         ; column counter (0 to GRID_WIDTH-1)
+
+    InnerLoopL2:
+        inc edi
+
+        ; 1. Check for Outer Boundary Walls
+        cmp esi, 0
+        je StoreWall_L2
+        cmp esi, GRID_HEIGHT-1
+        je StoreWall_L2
+        cmp edi, 0
+        je StoreWall_L2
+        cmp edi, GRID_WIDTH-1
+        je StoreWall_L2
+
+        ; 2. User's Vertical Wall at edi = 9
+        cmp edi, 9
+        jne CheckTwoShape_Entry_L2
+        cmp esi, 4
+        jl CheckTwoShape_Entry_L2
+        cmp esi, 16
+        jg CheckTwoShape_Entry_L2
+        jmp StoreWall_L2
+
+    CheckTwoShape_Entry_L2:
+        ; 3. User's '2' Shape Walls
+        ; Top horizontal bar of '2': esi = 6, edi from 18 to 26
+        cmp esi, 6
+        jne CheckTwoShape_MiddlePart_L2
+        cmp edi, 18
+        jl CheckOneShape_Entry_L2
+        cmp edi, 26
+        jg CheckOneShape_Entry_L2
+        jmp StoreWall_L2
+
+    CheckTwoShape_MiddlePart_L2:
+        ; Right vertical bar of '2': edi = 26, esi from 6 to 10
+        cmp edi, 26
+        jne CheckTwoShape_BottomPart_L2
+        cmp esi, 6
+        jl CheckOneShape_Entry_L2
+        cmp esi, 10
+        jg CheckOneShape_Entry_L2
+        jmp StoreWall_L2
+
+    CheckTwoShape_BottomPart_L2:
+        ; Middle horizontal bar of '2': esi = 10, edi from 18 to 26
+        cmp esi, 10
+        jne CheckTwoShape_LeftPart_L2
+        cmp edi, 18
+        jl CheckOneShape_Entry_L2
+        cmp edi, 26
+        jg CheckOneShape_Entry_L2
+        jmp StoreWall_L2
+
+    CheckTwoShape_LeftPart_L2:
+        ; Left vertical bar of '2': edi = 18, esi from 10 to 14
+        cmp edi, 18
+        jne CheckTwoShape_HorizontalBottom_L2
+        cmp esi, 10
+        jl CheckOneShape_Entry_L2
+        cmp esi, 14
+        jg CheckOneShape_Entry_L2
+        jmp StoreWall_L2
+
+    CheckTwoShape_HorizontalBottom_L2:
+        ; Bottom most horizontal bar of '2': esi = 14, edi from 18 to 26
+        cmp esi, 14
+        jne CheckOneShape_Entry_L2
+        cmp edi, 18
+        jl CheckOneShape_Entry_L2
+        cmp edi, 26
+        jg CheckOneShape_Entry_L2
+        jmp StoreWall_L2
+
+    CheckOneShape_Entry_L2:
+        ; 4. User's Vertical Wall at edi = 35
+        cmp edi, 35
+        jne CheckL1Walls_SetA_Start_L2
+        cmp esi, 4
+        jl CheckL1Walls_SetA_Start_L2
+        cmp esi, 16
+        jg CheckL1Walls_SetA_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetA_Start_L2:
+        ; 5. User's Walls Set A (Top-left L-shape & extensions)
+        ; A1. Horizontal: esi = 2, edi from 2 to 6.
+        cmp esi, 2
+        jne CheckL1Walls_SetA2_L2
+        cmp edi, 2
+        jl CheckL1Walls_SetA2_L2
+        cmp edi, 6
+        jg CheckL1Walls_SetA2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetA2_L2: ; A2. Vertical: edi = 2, esi from 2 to 8.
+        cmp edi, 2
+        jne CheckL1Walls_SetA3_L2
+        cmp esi, 2
+        jl CheckL1Walls_SetA3_L2
+        cmp esi, 8
+        jg CheckL1Walls_SetA3_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetA3_L2: ; A3. Horizontal: esi = 8, edi from 2 to 6.
+        cmp esi, 8
+        jne CheckL1Walls_SetA4_L2
+        cmp edi, 2
+        jl CheckL1Walls_SetA4_L2
+        cmp edi, 6
+        jg CheckL1Walls_SetA4_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetA4_L2: ; A4. Vertical: edi = 6, esi from 2 to 4.
+        cmp edi, 6
+        jne CheckL1Walls_SetA5_L2
+        cmp esi, 2
+        jl CheckL1Walls_SetA5_L2
+        cmp esi, 4
+        jg CheckL1Walls_SetA5_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetA5_L2: ; A5. Horizontal: esi = 4, edi from 4 to 6.
+        cmp esi, 4
+        jne CheckL1Walls_SetB_Start_L2
+        cmp edi, 4
+        jl CheckL1Walls_SetB_Start_L2
+        cmp edi, 6
+        jg CheckL1Walls_SetB_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetB_Start_L2:
+        ; 6. User's Walls Set B (Bottom-left L-shape & extensions)
+        ; B1. Horizontal: esi = 12, edi from 2 to 6.
+        cmp esi, 12
+        jne CheckL1Walls_SetB2_L2
+        cmp edi, 2
+        jl CheckL1Walls_SetB2_L2
+        cmp edi, 6
+        jg CheckL1Walls_SetB2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetB2_L2: ; B2. Vertical: edi = 2, esi from 12 to 18.
+        cmp edi, 2
+        jne CheckL1Walls_SetB3_L2
+        cmp esi, 12
+        jl CheckL1Walls_SetB3_L2
+        cmp esi, 18
+        jg CheckL1Walls_SetB3_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetB3_L2: ; B3. Horizontal: esi = 18, edi from 2 to 6.
+        cmp esi, 18
+        jne CheckL1Walls_SetB4_L2
+        cmp edi, 2
+        jl CheckL1Walls_SetB4_L2
+        cmp edi, 6
+        jg CheckL1Walls_SetB4_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetB4_L2: ; B4. Vertical: edi = 6, esi from 16 to 18.
+        cmp edi, 6
+        jne CheckL1Walls_SetB5_L2
+        cmp esi, 16
+        jl CheckL1Walls_SetB5_L2
+        cmp esi, 18
+        jg CheckL1Walls_SetB5_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetB5_L2: ; B5. Horizontal: esi = 16, edi from 4 to 6.
+        cmp esi, 16
+        jne CheckL1Walls_SetC_Start_L2
+        cmp edi, 4
+        jl CheckL1Walls_SetC_Start_L2
+        cmp edi, 6
+        jg CheckL1Walls_SetC_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetC_Start_L2:
+        ; 7. User's Walls Set C (Top-right L-shape & extensions)
+        ; C1. Horizontal: esi = 2, edi from 38 to 42.
+        cmp esi, 2
+        jne CheckL1Walls_SetC2_L2
+        cmp edi, 38
+        jl CheckL1Walls_SetC2_L2
+        cmp edi, 42
+        jg CheckL1Walls_SetC2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetC2_L2: ; C2. Vertical: edi = 42, esi from 2 to 8.
+        cmp edi, 42
+        jne CheckL1Walls_SetC3_L2
+        cmp esi, 2
+        jl CheckL1Walls_SetC3_L2
+        cmp esi, 8
+        jg CheckL1Walls_SetC3_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetC3_L2: ; C3. Horizontal: esi = 8, edi from 38 to 42.
+        cmp esi, 8
+        jne CheckL1Walls_SetC4_L2
+        cmp edi, 38
+        jl CheckL1Walls_SetC4_L2
+        cmp edi, 42
+        jg CheckL1Walls_SetC4_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetC4_L2: ; C4. Vertical: edi = 38, esi from 2 to 4.
+        cmp edi, 38
+        jne CheckL1Walls_SetC5_L2
+        cmp esi, 2
+        jl CheckL1Walls_SetC5_L2
+        cmp esi, 4
+        jg CheckL1Walls_SetC5_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetC5_L2: ; C5. Horizontal: esi = 4, edi from 38 to 40.
+        cmp esi, 4
+        jne CheckL1Walls_SetD_Start_L2
+        cmp edi, 38
+        jl CheckL1Walls_SetD_Start_L2
+        cmp edi, 40
+        jg CheckL1Walls_SetD_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetD_Start_L2:
+        ; 8. User's Walls Set D (Bottom-right L-shape & extensions)
+        ; D1. Horizontal: esi = 12, edi from 38 to 42.
+        cmp esi, 12
+        jne CheckL1Walls_SetD2_L2
+        cmp edi, 38
+        jl CheckL1Walls_SetD2_L2
+        cmp edi, 42
+        jg CheckL1Walls_SetD2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetD2_L2: ; D2. Vertical: edi = 42, esi from 12 to 18.
+        cmp edi, 42
+        jne CheckL1Walls_SetD3_L2
+        cmp esi, 12
+        jl CheckL1Walls_SetD3_L2
+        cmp esi, 18
+        jg CheckL1Walls_SetD3_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetD3_L2: ; D3. Horizontal: esi = 18, edi from 38 to 42.
+        cmp esi, 18
+        jne CheckL1Walls_SetD4_L2
+        cmp edi, 38
+        jl CheckL1Walls_SetD4_L2
+        cmp edi, 42
+        jg CheckL1Walls_SetD4_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetD4_L2: ; D4. Vertical: edi = 38, esi from 16 to 18.
+        cmp edi, 38
+        jne CheckL1Walls_SetD5_L2
+        cmp esi, 16
+        jl CheckL1Walls_SetD5_L2
+        cmp esi, 18
+        jg CheckL1Walls_SetD5_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetD5_L2: ; D5. Horizontal: esi = 16, edi from 38 to 40.
+        cmp esi, 16
+        jne CheckL1Walls_SetE_Start_L2
+        cmp edi, 38
+        jl CheckL1Walls_SetE_Start_L2
+        cmp edi, 40
+        jg CheckL1Walls_SetE_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetE_Start_L2:
+        ; 9. User's Walls Set E (Top connecting horizontal lines)
+        ; E1. esi = 2, edi from 11 to 17.
+        cmp esi, 2
+        jne CheckL1Walls_SetE2_L2
+        cmp edi, 11
+        jl CheckL1Walls_SetE2_L2
+        cmp edi, 17
+        jg CheckL1Walls_SetE2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetE2_L2: ; E2. esi = 2, edi from 27 to 33.
+        cmp esi, 2
+        jne CheckL1Walls_SetF_Start_L2
+        cmp edi, 27
+        jl CheckL1Walls_SetF_Start_L2
+        cmp edi, 33
+        jg CheckL1Walls_SetF_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetF_Start_L2:
+        ; 10. User's Walls Set F (Bottom connecting horizontal lines)
+        ; F1. esi = 18, edi from 11 to 17.
+        cmp esi, 18
+        jne CheckL1Walls_SetF2_L2
+        cmp edi, 11
+        jl CheckL1Walls_SetF2_L2
+        cmp edi, 17
+        jg CheckL1Walls_SetF2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetF2_L2: ; F2. esi = 18, edi from 27 to 33.
+        cmp esi, 18
+        jne CheckL1Walls_SetG_Start_L2
+        cmp edi, 27
+        jl CheckL1Walls_SetG_Start_L2
+        cmp edi, 33
+        jg CheckL1Walls_SetG_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetG_Start_L2:
+        ; 11. User's Walls Set G (Top-left "T" / Pillar)
+        ; G1. Horizontal top: esi = 4, edi from 12 to 16.
+        cmp esi, 4
+        jne CheckL1Walls_SetG2_L2
+        cmp edi, 12
+        jl CheckL1Walls_SetG2_L2
+        cmp edi, 16
+        jg CheckL1Walls_SetG2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetG2_L2: ; G2. Vertical stem: edi = 14, esi from 4 to 6.
+        cmp edi, 14
+        jne CheckL1Walls_SetH_Start_L2
+        cmp esi, 4
+        jl CheckL1Walls_SetH_Start_L2
+        cmp esi, 6
+        jg CheckL1Walls_SetH_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetH_Start_L2:
+        ; 12. User's Walls Set H (Bottom-left "T" / Pillar)
+        ; H1. Horizontal bottom: esi = 16, edi from 12 to 16.
+        cmp esi, 16
+        jne CheckL1Walls_SetH2_L2
+        cmp edi, 12
+        jl CheckL1Walls_SetH2_L2
+        cmp edi, 16
+        jg CheckL1Walls_SetH2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetH2_L2: ; H2. Vertical stem: edi = 14, esi from 14 to 16.
+        cmp edi, 14
+        jne CheckL1Walls_SetI_Start_L2
+        cmp esi, 14
+        jl CheckL1Walls_SetI_Start_L2
+        cmp esi, 16
+        jg CheckL1Walls_SetI_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetI_Start_L2:
+        ; 13. User's Walls Set I (Top-right "T" / Pillar)
+        ; I1. Horizontal top: esi = 4, edi from 28 to 32.
+        cmp esi, 4
+        jne CheckL1Walls_SetI2_L2
+        cmp edi, 28
+        jl CheckL1Walls_SetI2_L2
+        cmp edi, 32
+        jg CheckL1Walls_SetI2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetI2_L2: ; I2. Vertical stem: edi = 30, esi from 4 to 6.
+        cmp edi, 30
+        jne CheckL1Walls_SetJ_Start_L2
+        cmp esi, 4
+        jl CheckL1Walls_SetJ_Start_L2
+        cmp esi, 6
+        jg CheckL1Walls_SetJ_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetJ_Start_L2:
+        ; 14. User's Walls Set J (Bottom-right "T" / Pillar)
+        ; J1. Horizontal bottom: esi = 16, edi from 28 to 32.
+        cmp esi, 16
+        jne CheckL1Walls_SetJ2_L2
+        cmp edi, 28
+        jl CheckL1Walls_SetJ2_L2
+        cmp edi, 32
+        jg CheckL1Walls_SetJ2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetJ2_L2: ; J2. Vertical stem: edi = 30, esi from 14 to 16.
+        cmp edi, 30
+        jne CheckL1Walls_SetK_Start_L2
+        cmp esi, 14
+        jl CheckL1Walls_SetK_Start_L2
+        cmp esi, 16
+        jg CheckL1Walls_SetK_Start_L2
+        jmp StoreWall_L2
+
+    CheckL1Walls_SetK_Start_L2:
+        ; 15. User's Walls Set K (Small horizontal segments)
+        ; K1. esi = 8, edi from 13 to 15.
+        cmp esi, 8
+        jne CheckL1Walls_SetK2_L2
+        cmp edi, 13
+        jl CheckL1Walls_SetK2_L2
+        cmp edi, 15
+        jg CheckL1Walls_SetK2_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetK2_L2: ; K2. esi = 12, edi from 13 to 15.
+        cmp esi, 12
+        jne CheckL1Walls_SetK3_L2
+        cmp edi, 13
+        jl CheckL1Walls_SetK3_L2
+        cmp edi, 15
+        jg CheckL1Walls_SetK3_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetK3_L2: ; K3. esi = 8, edi from 29 to 31.
+        cmp esi, 8
+        jne CheckL1Walls_SetK4_L2
+        cmp edi, 29
+        jl CheckL1Walls_SetK4_L2
+        cmp edi, 31
+        jg CheckL1Walls_SetK4_L2
+        jmp StoreWall_L2
+    CheckL1Walls_SetK4_L2: ; K4. esi = 12, edi from 29 to 31.
+        cmp esi, 12
+        jne CheckL2_CorridorBaffles1_L2
+        cmp edi, 29
+        jl CheckL2_CorridorBaffles1_L2
+        cmp edi, 31
+        jg CheckL2_CorridorBaffles1_L2
+        jmp StoreWall_L2
+
+    ; --- START OF LEVEL 2 ORIGINAL ADDITIONS ---
+    CheckL2_CorridorBaffles1_L2:
+        ; 16. L2 Walls: Corridor Baffles
+        ; Top corridor: esi=1, edi=15 OR edi=29
+        cmp esi, 1
+        jne CheckL2_CorridorBaffles2_L2
+        cmp edi, 15
+        je StoreWall_L2
+        cmp edi, 29
+        je StoreWall_L2
+    CheckL2_CorridorBaffles2_L2:
+        ; Bottom corridor: esi=20, edi=15 OR edi=29
+        cmp esi, 20 ; GRID_HEIGHT-2 = 20
+        jne CheckL2_K_Connectors_V1_L2
+        cmp edi, 15
+        je StoreWall_L2
+        cmp edi, 29
+        je StoreWall_L2
+
+    CheckL2_K_Connectors_V1_L2:
+        ; 17. L2 Walls: K-Block Vertical Connectors (Left Side)
+        ; edi=13, esi from 9 to 11
+        cmp edi, 13
+        jne CheckL2_K_Connectors_V2_L2
+        cmp esi, 9
+        jl CheckL2_K_Connectors_V2_L2
+        cmp esi, 11
+        jg CheckL2_K_Connectors_V2_L2
+        jmp StoreWall_L2
+    CheckL2_K_Connectors_V2_L2:
+        ; edi=15, esi from 9 to 11
+        cmp edi, 15
+        jne CheckL2_K_Connectors_V3_L2
+        cmp esi, 9
+        jl CheckL2_K_Connectors_V3_L2
+        cmp esi, 11
+        jg CheckL2_K_Connectors_V3_L2
+        jmp StoreWall_L2
+
+    CheckL2_K_Connectors_V3_L2:
+        ; K-Block Vertical Connectors (Right Side)
+        ; edi=29, esi from 9 to 11
+        cmp edi, 29
+        jne CheckL2_K_Connectors_V4_L2
+        cmp esi, 9
+        jl CheckL2_K_Connectors_V4_L2
+        cmp esi, 11
+        jg CheckL2_K_Connectors_V4_L2
+        jmp StoreWall_L2
+    CheckL2_K_Connectors_V4_L2:
+        ; edi=31, esi from 9 to 11
+        cmp edi, 31
+        jne CheckL2_FillZeroes_Left_L2 ; Proceed to Zero filling
+        cmp esi, 9
+        jl CheckL2_FillZeroes_Left_L2
+        cmp esi, 11
+        jg CheckL2_FillZeroes_Left_L2
+        jmp StoreWall_L2
+
+    ; --- START OF USER REQUESTED MODIFICATIONS (Filling Zeroes & New Walls) ---
+    CheckL2_FillZeroes_Left_L2:
+        ; 18. L2 User Mod: Fill Left "Zero"
+        ; edi=14, esi from 9 to 11
+        cmp edi, 14
+        jne CheckL2_FillZeroes_Right_L2
+        cmp esi, 9
+        jl CheckL2_FillZeroes_Right_L2
+        cmp esi, 11
+        jg CheckL2_FillZeroes_Right_L2
+        jmp StoreWall_L2
+
+    CheckL2_FillZeroes_Right_L2:
+        ; 19. L2 User Mod: Fill Right "Zero"
+        ; edi=30, esi from 9 to 11 (Note: user's original T-pillar stem was at 30, this fills the space next to K-block connector at 29/31)
+        cmp edi, 30
+        jne CheckL2_LShape_Internal_A1_L2 ; Original next check for L-shape internals
+        cmp esi, 9
+        jl CheckL2_LShape_Internal_A1_L2
+        cmp esi, 11
+        jg CheckL2_LShape_Internal_A1_L2
+        jmp StoreWall_L2
+
+    CheckL2_LShape_Internal_A1_L2:
+        ; 20. L2 Walls: Original L-Shape Internal Blocks
+        ; Top-Left L-Shape (Set A related): esi=5, edi=4 OR edi=5
+        cmp esi, 5
+        jne CheckL2_LShape_Internal_B1_L2
+        cmp edi, 4
+        je StoreWall_L2
+        cmp edi, 5
+        je StoreWall_L2
+        ; If esi is 5 but edi not 4 or 5, continue
+    CheckL2_LShape_Internal_B1_L2:
+        ; Bottom-Left L-Shape (Set B related): esi=15, edi=4 OR edi=5
+        cmp esi, 15
+        jne CheckL2_LShape_Internal_C1_L2
+        cmp edi, 4
+        je StoreWall_L2
+        cmp edi, 5
+        je StoreWall_L2
+        ; If esi is 15 but edi not 4 or 5, continue
+    CheckL2_LShape_Internal_C1_L2:
+        ; Top-Right L-Shape (Set C related): esi=5, edi=39 OR edi=40
+        cmp esi, 5
+        jne CheckL2_LShape_Internal_D1_L2
+        cmp edi, 39
+        je StoreWall_L2
+        cmp edi, 40
+        je StoreWall_L2
+        ; If esi is 5 but edi not 39 or 40, continue
+    CheckL2_LShape_Internal_D1_L2:
+        ; Bottom-Right L-Shape (Set D related): esi=15, edi=39 OR edi=40
+        cmp esi, 15
+        jne CheckL2_NewCaps_Top_L2 ; Proceed to new cap walls
+        cmp edi, 39
+        je StoreWall_L2
+        cmp edi, 40
+        je StoreWall_L2
+        ; If esi is 15 but edi not 39 or 40, continue
+
+    CheckL2_NewCaps_Top_L2:
+        ; 21. L2 User Mod: New Wall - Top Cap for '2'
+        ; esi = 5, edi from 21 to 23
+        cmp esi, 5
+        jne CheckL2_NewCaps_Bottom_L2
+        cmp edi, 21
+        jl CheckL2_NewCaps_Bottom_L2
+        cmp edi, 23
+        jg CheckL2_NewCaps_Bottom_L2
+        jmp StoreWall_L2
+
+    CheckL2_NewCaps_Bottom_L2:
+        ; 22. L2 User Mod: New Wall - Bottom Cap for '2'
+        ; esi = 15, edi from 21 to 23
+        cmp esi, 15
+        jne CheckL2_NewLProtrusion_TL_L2
+        cmp edi, 21
+        jl CheckL2_NewLProtrusion_TL_L2
+        cmp edi, 23
+        jg CheckL2_NewLProtrusion_TL_L2
+        jmp StoreWall_L2
+
+    CheckL2_NewLProtrusion_TL_L2:
+        ; 23. L2 User Mod: New Wall - Inner L-Shape Protrusion (Top-Left)
+        ; edi = 4, esi = 7
+        cmp edi, 4
+        jne CheckL2_NewLProtrusion_TR_L2
+        cmp esi, 7
+        je StoreWall_L2
+        ; If edi is 4 but esi not 7, continue
+
+    CheckL2_NewLProtrusion_TR_L2:
+        ; 24. L2 User Mod: New Wall - Inner L-Shape Protrusion (Top-Right)
+        ; edi = 40, esi = 7
+        cmp edi, 40
+        jne CheckL2_NewLProtrusion_BL_L2
+        cmp esi, 7
+        je StoreWall_L2
+        ; If edi is 40 but esi not 7, continue
+
+    CheckL2_NewLProtrusion_BL_L2:
+        ; 25. L2 User Mod: New Wall - Inner L-Shape Protrusion (Bottom-Left)
+        ; edi = 4, esi = 13
+        cmp edi, 4
+        jne CheckL2_NewLProtrusion_BR_L2
+        cmp esi, 13
+        je StoreWall_L2
+        ; If edi is 4 but esi not 13, continue
+
+    CheckL2_NewLProtrusion_BR_L2:
+        ; 26. L2 User Mod: New Wall - Inner L-Shape Protrusion (Bottom-Right)
+        ; edi = 40, esi = 13
+        cmp edi, 40
+        jne CheckPacmanPos_L2 ; All wall checks done
+        cmp esi, 13
+        je StoreWall_L2
+        ; If edi is 40 but esi not 13, continue to Pacman
+    ; --- END OF USER REQUESTED MODIFICATIONS ---
+
+    CheckPacmanPos_L2:
+        cmp esi, pacmanRow
+        jne StoreDot_L2
+        cmp edi, pacmanCol
+        jne StoreDot_L2
+        jmp StorePacman_L2
+
+    StoreWall_L2:
+        mov al, wallChar
+        jmp MoveCharacter_L2
+
+    StoreDot_L2:
+        mov al, dotChar
+        jmp MoveCharacter_L2
+
+    StorePacman_L2:
+        mov al, 50h         ; Character for Pacman (ASCII 'P')
+        ; jmp MoveCharacter_L2 ; Fall through
+
+    MoveCharacter_L2:
+        mov [GRID + ebx * TYPE GRID], al
+        inc ebx
+        dec ecx
+        jnz InnerLoopL2
+
+        pop ecx
+        dec ecx
+        jnz OuterLoopL2
+    ret
 initialiseLevel2 ENDP
+
