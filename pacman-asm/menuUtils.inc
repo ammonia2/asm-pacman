@@ -186,10 +186,10 @@ saveHighScore PROC
     lengthFound:
         push ecx
 
-        mov eax, handler
-        mov edx, OFFSET crlfString
-        mov ecx, 2
-        call WriteToFile
+        ; mov eax, handler
+        ; mov edx, OFFSET crlfString
+        ; mov ecx, 2
+        ; call WriteToFile
 
         pop ecx
         mov edx, OFFSET tempBuffer

@@ -1,13 +1,13 @@
-initialiseLevel1Ghosts PROC uses esi eax ebx ecx
+initialiseLevel3Ghosts PROC uses esi eax ebx ecx
     LOCAL ghostCounter:DWORD
 
     mov ghostCollision, 0
     mov ghostCounter, 0
-    mov ghostSpeed, 10
-    mov numGhosts, 3  ; 3 Ghosts for Level 1
-    mov esi, 0 ; ghost count
+    mov ghostSpeed, 3
+    mov numGhosts, 7       ; 7 Ghosts for Level 3
+    mov esi, 0             ; ghost array index offset
     
-    ghostInitL1:
+    ghostInitL3:
         ; ghostRow
         mov maxValue, GRID_HEIGHT - 3
         mov minValue, 3
@@ -27,25 +27,26 @@ initialiseLevel1Ghosts PROC uses esi eax ebx ecx
         mov al, gridVal
 
         cmp al, '.'
-        jnz ghostInitL1
+        jnz ghostInitL3
 
         mov eax, ghostRow
         mov ghosts[esi], eax
         mov eax, ghostCol
         mov ghosts[esi + type ghosts], eax
         mov edx, ghostCounter
-        call storeGhost_L1
+        call storeGhost_L3
 
         add esi, 2 * type ghosts
         inc ghostCounter
 
-        cmp esi, 6 * type ghosts
-        jnz ghostInitL1
+        mov eax, ghostCounter
+        cmp al, numGhosts
+        jnz ghostInitL3
 
     ret
-initialiseLevel1Ghosts ENDP
+initialiseLevel3Ghosts ENDP
 
-storeGhost_L1 PROC uses eax ebx ecx
+storeGhost_L3 PROC uses eax ebx ecx
     mov ebx, ghostRow
     imul ebx, GRID_WIDTH
     mov ecx, ghostCol
@@ -55,17 +56,17 @@ storeGhost_L1 PROC uses eax ebx ecx
     mov GRID[ebx], al
 
     cmp cl, 'G'
-    jz skipTileSaveL1
+    jz skipTileSaveL3
     cmp cl, 'P'
-    jz emptyTileSaveL1
+    jz emptyTileSaveL3
 
     mov originalTiles[edx], cl
-    jmp skipTileSaveL1
+    jmp skipTileSaveL3
     
-    emptyTileSaveL1:
+    emptyTileSaveL3:
         mov originalTiles[edx], 20h
 
-    skipTileSaveL1:
+    skipTileSaveL3:
 
     ; only redraw what's needed
     mov dh, BYTE PTR ghostRow
@@ -77,9 +78,9 @@ storeGhost_L1 PROC uses eax ebx ecx
     call WriteChar
 
     ret
-storeGhost_L1 ENDP
+storeGhost_L3 ENDP
 
-storePacmanL1 PROC uses ebx ecx
+storePacmanL3 PROC uses ebx ecx
     mov ebx, pacmanRow
     imul ebx, GRID_WIDTH
     mov ecx, pacmanCol
@@ -96,9 +97,9 @@ storePacmanL1 PROC uses ebx ecx
     call WriteChar
 
     ret
-storePacmanL1 ENDP
+storePacmanL3 ENDP
 
-storeEmptyCharL1 PROC uses ebx ecx
+storeEmptyCharL3 PROC uses ebx ecx
     mov ebx, pacmanRow
     imul ebx, GRID_WIDTH
     mov ecx, pacmanCol
@@ -114,9 +115,9 @@ storeEmptyCharL1 PROC uses ebx ecx
     call WriteChar
 
     ret
-storeEmptyCharL1 ENDP
+storeEmptyCharL3 ENDP
 
-storeGhostPrevL1 PROC uses ebx ecx
+storeGhostPrevL3 PROC uses ebx ecx
     mov ebx, ghostRow
     imul ebx, GRID_WIDTH
     mov ecx, ghostCol
@@ -133,9 +134,9 @@ storeGhostPrevL1 PROC uses ebx ecx
     call WriteChar
 
     ret
-storeGhostPrevL1 ENDP
+storeGhostPrevL3 ENDP
 
-drawLevel1 PROC
+drawLevel3 PROC
     ; curr score
     call displayScore
     call displayLives
@@ -147,190 +148,187 @@ drawLevel1 PROC
     mov ecx, GRID_HEIGHT * GRID_WIDTH
     mov ebx, 0
     mov esi, 1 ; col counter
-    level1Draw:
+    level3Draw:
         mov al, [GRID + ebx* type GRID]
         call writechar
 
         ; extra char in bw walls
         cmp al, wallChar
-        jnz extraWhiteSpace_L1
+        jnz extraWhiteSpace_L3
         call writechar
-        jmp skipWhitespace_L1
-        extraWhiteSpace_L1:
+        jmp skipWhitespace_L3
+        extraWhiteSpace_L3:
         mov al, 20h
         call writechar
 
-        skipWhitespace_L1:
+        skipWhitespace_L3:
         cmp esi, GRID_WIDTH
-        jnz skipCrlf_L1
+        jnz skipCrlf_L3
         call Crlf
         mov esi, 0
 
-        skipCrlf_L1:
+        skipCrlf_L3:
         inc esi
         inc ebx
 
         dec ecx
-        jnz level1Draw
+        jnz level3Draw
 
     ret
-drawLevel1 ENDP
+drawLevel3 ENDP
 
-playLevel1 PROC
+playLevel3 PROC
     call Clrscr
-    call drawLevel1
+    call drawLevel3
 
     mov speedCounter, 0 ; for ghosts movement speed
-    inputLoop_L1:
+    inputLoop_L3:
         mov edx, ecx
         call ReadKey
-        jz noInput_L1
+        jz noInput_L3
 
         cmp al, 77h ; lowercase 'w'
-        jnz inputCheck2_L1
+        jnz inputCheck2_L3
 
-        call storeEmptyCharL1
+        call storeEmptyCharL3
         sub pacmanRow, 1
 
         call getGridVal
         mov bl, wallChar
         cmp gridVal, bl
-        je revertMoveUp_L1
+        je revertMoveUp_L3
 
         cmp pacmanRow, 0
-        jl revertMoveUp_L1
+        jl revertMoveUp_L3
 
-        jmp inputDone_L1
+        jmp inputDone_L3
 
-    revertMoveUp_L1:
+    revertMoveUp_L3:
         add pacmanRow, 1
-        call storePacmanL1
-        jmp noInput_L1
+        call storePacmanL3
+        jmp noInput_L3
 
-    inputCheck2_L1:
+    inputCheck2_L3:
         cmp al, 61h ; lowercase 'a'
-        jnz inputCheck3_L1
+        jnz inputCheck3_L3
 
-        call storeEmptyCharL1
+        call storeEmptyCharL3
         sub pacmanCol, 1
 
         call getGridVal
         mov bl, wallChar
         cmp gridVal, bl
-        je revertMoveLeft_L1
+        je revertMoveLeft_L3
 
         cmp pacmanCol, 0
-        jl revertMoveLeft_L1
+        jl revertMoveLeft_L3
 
-        jmp inputDone_L1
+        jmp inputDone_L3
 
-    revertMoveLeft_L1:
+    revertMoveLeft_L3:
         add pacmanCol, 1
-        call storePacmanL1
-        jmp noInput_L1
+        call storePacmanL3
+        jmp noInput_L3
 
-    inputCheck3_L1:
+    inputCheck3_L3:
         cmp al, 73h ; lowercase 's'
-        jnz inputCheck4_L1
+        jnz inputCheck4_L3
 
-        call storeEmptyCharL1
+        call storeEmptyCharL3
         add pacmanRow, 1
 
         call getGridVal
         mov bl, wallChar
         cmp gridVal, bl
-        je revertMoveDown_L1
+        je revertMoveDown_L3
 
         cmp pacmanRow, GRID_HEIGHT-1
-        ja revertMoveDown_L1
+        ja revertMoveDown_L3
 
-        jmp inputDone_L1
+        jmp inputDone_L3
 
-    revertMoveDown_L1:
+    revertMoveDown_L3:
         sub pacmanRow, 1
-        call storePacmanL1
-        jmp noInput_L1
+        call storePacmanL3
+        jmp noInput_L3
 
-    inputCheck4_L1:
+    inputCheck4_L3:
         cmp al, 64h ; lowercase 'd'
-        jnz noInput_L1
+        jnz noInput_L3
 
-        call storeEmptyCharL1
+        call storeEmptyCharL3
         add pacmanCol, 1
 
         call getGridVal
         mov bl, wallChar
         cmp gridVal, bl
-        je revertMoveRight_L1
+        je revertMoveRight_L3
 
         cmp pacmanCol, GRID_WIDTH-1
-        ja revertMoveRight_L1
+        ja revertMoveRight_L3
 
-        jmp inputDone_L1
+        jmp inputDone_L3
 
-    revertMoveRight_L1:
+    revertMoveRight_L3:
         sub pacmanCol, 1
-        call storePacmanL1
-        jmp noInput_L1
+        call storePacmanL3
+        jmp noInput_L3
 
         ; input processing
-    inputDone_L1:
+    inputDone_L3:
         ; updating grid
 
         cmp gridVal, '.'
-        jnz skipScoreUpdate_L1
+        jnz skipScoreUpdate_L3
         inc currentScore
         call displayScore
 
-    skipScoreUpdate_L1:
-        call storePacmanL1
+    skipScoreUpdate_L3:
+        call storePacmanL3
 
-    noInput_L1:
+    noInput_L3:
         inc speedCounter
         mov eax, speedCounter
-        cmp eax, ghostSpeed ; speed: every 5 iterations
-        jb skipGhostMove_L1
+        cmp eax, ghostSpeed ; speed: every X iterations
+        jb skipGhostMove_L3
         
         mov speedCounter, 0
-        call moveGhosts_L1
+        call moveGhosts_L3
         cmp ghostCollision, 1
-        JE level1Finished
+        JE level3Finished
 
-    skipGhostMove_L1:
-        ;call Clrscr
-        ;call drawLevel1
-
+    skipGhostMove_L3:
         mov eax, 50
         call Delay
 
-        jmp inputLoop_L1
+        jmp inputLoop_L3
 
-    level1Finished:
+    level3Finished:
         dec lives
         CALL displayLives
         cmp lives, 0
-        JNE resetPacman_L1
-        jmp finish_L1
+        JNE resetPacman_L3
+        jmp finish_L3
 
-        resetPacman_L1:
-            CALL storeEmptyCharL1
-            mov pacmanRow, 8
+        resetPacman_L3:
+            CALL storeEmptyCharL3
+            mov pacmanRow, 8 
             mov pacmanCol, 22
-            CALL storePacmanL1
+            CALL storePacmanL3
 
             mov ghostCollision, 0
-            jmp inputLoop_L1
+            jmp inputLoop_L3
 
-        finish_L1:
+        finish_L3:
             mov dh, GRID_HEIGHT + 1
             mov dl, 0
             call Gotoxy
 
         ret
-playLevel1 ENDP
+playLevel3 ENDP
 
 
-getDirections_L1 PROC uses edx esi
+getDirections_L3 PROC uses edx esi
     mov esi, 0
     mov edx, eax
     ; UP
@@ -340,11 +338,11 @@ getDirections_L1 PROC uses edx esi
     call getGridValGhost
     mov al, gridVal
     cmp al, wallChar ; Only check if it's not a wall
-    je downCheck_l1
+    je downCheck_l3
     mov possibleDirs[esi], UP
     inc esi
 
-    downCheck_l1:
+    downCheck_l3:
         ; DOWN
         mov ghostRow, edx
         inc ghostRow
@@ -352,11 +350,11 @@ getDirections_L1 PROC uses edx esi
         call getGridValGhost
         mov al, gridVal
         cmp al, wallChar
-        je leftCheck_l1
+        je leftCheck_l3
         mov possibleDirs[esi], DOWN
         inc esi
 
-    leftCheck_l1:
+    leftCheck_l3:
         ; LEFT
         mov ghostRow, edx
         mov ghostCol, ebx
@@ -364,11 +362,11 @@ getDirections_L1 PROC uses edx esi
         call getGridValGhost
         mov al, gridVal
         cmp al, wallChar
-        je rightCheck_l1
+        je rightCheck_l3
         mov possibleDirs[esi], LEFT
         inc esi
 
-    rightCheck_l1:
+    rightCheck_l3:
         ; RIGHT
         mov ghostRow, edx
         mov ghostCol, ebx
@@ -376,49 +374,29 @@ getDirections_L1 PROC uses edx esi
         call getGridValGhost
         mov al, gridVal
         cmp al, wallChar
-        je doneCheck_l1
+        je doneCheck_l3
         mov possibleDirs[esi], RIGHT
         inc esi
 
-    doneCheck_l1:
+    doneCheck_l3:
         mov eax, esi ; num of directions
         ret
-getDirections_L1 ENDP
+getDirections_L3 ENDP
 
-; debugging proc
-printPossibleDirns PROC uses ecx esi edx
-    mov ecx, eax
-    mov edx, OFFSET debugStr2
-    call writestring
-
-    mov esi, 0
-    lup:
-        mov al, possibleDirs[esi]
-        call writeint
-        mov edx, OFFSET comma
-        call writestring
-        inc esi
-        loop lup
-
-    call Crlf
-    ret
-printPossibleDirns ENDP
-
-
-moveGhosts_L1 PROC uses ecx esi eax ebx
+moveGhosts_L3 PROC uses ecx esi eax ebx
     mov ecx, 0 ; ghostCounter 
     mov esi, 0
 
-    ghostLoop_L1:
+    ghostLoop_L3:
         mov currDist, 0FFFFFFFFh
         mov eax, ghosts[esi]
         mov ebx, ghosts[esi + type ghosts]
-        call getDirections_L1  ; Stores all possible directions in possibleDirs
+        call getDirections_L3  ; Stores all possible directions in possibleDirs
         mov edx, eax    ; Number of directions
 
         ; Calculate distances & select a direction
         mov edi, 0
-        selectDirection_l1:
+        selectDirection_l3:
             mov eax, ghosts[esi]
             mov ebx, ghosts[esi + type ghosts]
             
@@ -447,15 +425,15 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
         calc_dist:
             CALL calculateDistance
             cmp eax, currDist
-            JAE skipUpdateDirn_l1
+            JAE skipUpdateDirn_l3
             mov bl, possibleDirs[edi]
             mov ghostDirection[ecx], bl
             mov currDist, eax
 
-        skipUpdateDirn_l1:
+        skipUpdateDirn_l3:
             inc edi
             cmp edi, edx
-            jnz selectDirection_l1
+            jnz selectDirection_l3
 
 
     ; Use ghostDirection to now move ghost position
@@ -467,7 +445,7 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
     mov ghostCol, ebx
     
     mov edx, ecx
-    CALL storeGhostPrevL1
+    CALL storeGhostPrevL3
 
     mov eax, ghosts[esi]
     mov ebx, ghosts[esi + type ghosts]
@@ -505,20 +483,20 @@ moveGhosts_L1 PROC uses ecx esi eax ebx
         CALL getGridValGhost
         mov al, gridVal
         cmp al, PACMAN
-        JNE skipCollisionSet_L1
+        JNE skipCollisionSet_L3
         mov ghostCollision, 1
-        CALL storeGhost_L1
-        jmp ghostDone_L1
+        CALL storeGhost_L3
+        jmp ghostDone_L3
 
-        skipCollisionSet_L1:
+        skipCollisionSet_L3:
             mov edx, ecx
-            CALL storeGhost_L1
+            CALL storeGhost_L3
 
         add esi, 2 * type ghosts
         inc ecx
         cmp cl, numGhosts
-        jnz ghostLoop_L1
+        jnz ghostLoop_L3
     
-    ghostDone_L1:
+    ghostDone_L3:
         ret
-moveGhosts_L1 ENDP
+moveGhosts_L3 ENDP

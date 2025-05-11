@@ -102,6 +102,7 @@ INCLUDE level1.inc
 INCLUDE menuUtils.inc
 INCLUDE initialisations.inc
 INCLUDE level2.inc
+INCLUDE level3.inc
 
 main PROC
     CALL Randomize
@@ -131,20 +132,19 @@ startLevel1 PROC
     call initialiseLevel1Ghosts
     call playLevel1
 
-    ; call saveHighScore
     ret
 startLevel1 ENDP
 
 startLevel2 PROC
-    call initialiseLevel2
+    call initialiseLevel1
     
     mov currentScore, 0
     mov pacmanRow, 8
     mov pacmanCol, 22
     mov lives, 3
 
-    call initialiseLevel1Ghosts
-    call playLevel1
+    call initialiseLevel2Ghosts
+    call playLevel2
 
     ret
 startLevel2 ENDP
@@ -157,8 +157,8 @@ startLevel3 PROC
     mov pacmanCol, 22
     mov lives, 3
 
-    call initialiseLevel1Ghosts
-    call playLevel1
+    call initialiseLevel3Ghosts
+    call playLevel3
 
     ret
 startLevel3 ENDP
