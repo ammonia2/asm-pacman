@@ -5,3 +5,7 @@ sabun: 10
 cocomo: 18
 sabun no reply: 6
 meow: 23
+soban: 9
+soban: 1
+soban: 3
+asdsa: 3

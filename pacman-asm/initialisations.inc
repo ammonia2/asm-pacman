@@ -447,9 +447,6 @@ initialiseLevel1 PROC
     ret
 initialiseLevel1 ENDP
 
-; Assume GRID_WIDTH, GRID_HEIGHT, pacmanRow, pacmanCol,
-; wallChar, dotChar, and GRID (with its type) are defined elsewhere.
-
 initialiseLevel2 PROC
     mov ecx, GRID_HEIGHT
     mov esi, -1         ; row counter (0 to GRID_HEIGHT-1)
@@ -924,7 +921,6 @@ initialiseLevel2 PROC
         jg CheckL2_FillZeroes_Left_L2
         jmp StoreWall_L2
 
-    ; --- START OF USER REQUESTED MODIFICATIONS (Filling Zeroes & New Walls) ---
     CheckL2_FillZeroes_Left_L2:
         ; 18. L2 User Mod: Fill Left "Zero"
         ; edi=14, esi from 9 to 11
@@ -938,9 +934,9 @@ initialiseLevel2 PROC
 
     CheckL2_FillZeroes_Right_L2:
         ; 19. L2 User Mod: Fill Right "Zero"
-        ; edi=30, esi from 9 to 11 (Note: user's original T-pillar stem was at 30, this fills the space next to K-block connector at 29/31)
+        ; edi=30, esi from 9 to 11
         cmp edi, 30
-        jne CheckL2_LShape_Internal_A1_L2 ; Original next check for L-shape internals
+        jne CheckL2_LShape_Internal_A1_L2
         cmp esi, 9
         jl CheckL2_LShape_Internal_A1_L2
         cmp esi, 11
@@ -987,8 +983,7 @@ initialiseLevel2 PROC
 
     CheckL2_NewCaps_Top_L2:
         ; 21. L2 User Mod: New Wall - Top Cap for '2'
-        ; esi = 5, edi from 21 to 23
-        cmp esi, 5
+        cmp esi, 4
         jne CheckL2_NewCaps_Bottom_L2
         cmp edi, 21
         jl CheckL2_NewCaps_Bottom_L2
@@ -998,8 +993,7 @@ initialiseLevel2 PROC
 
     CheckL2_NewCaps_Bottom_L2:
         ; 22. L2 User Mod: New Wall - Bottom Cap for '2'
-        ; esi = 15, edi from 21 to 23
-        cmp esi, 15
+        cmp esi, 16
         jne CheckL2_NewLProtrusion_TL_L2
         cmp edi, 21
         jl CheckL2_NewLProtrusion_TL_L2
@@ -1075,3 +1069,542 @@ initialiseLevel2 PROC
     ret
 initialiseLevel2 ENDP
 
+initialiseLevel3 PROC
+    mov ecx, GRID_HEIGHT
+    mov esi, -1         ; row counter (0 to GRID_HEIGHT-1)
+    mov ebx, 0          ; grid index
+
+    OuterLoopL3:
+        inc esi
+        push ecx            ; save OuterLoop counter
+        mov ecx, GRID_WIDTH
+        mov edi, -1         ; column counter (0 to GRID_WIDTH-1)
+
+    InnerLoopL3:
+        inc edi
+
+        ; Check for Outer Boundary Walls
+        cmp esi, 0
+        je StoreWall_L3
+        cmp esi, GRID_HEIGHT-1
+        je StoreWall_L3
+        cmp edi, 0
+        je StoreWall_L3
+        cmp edi, GRID_WIDTH-1
+        je StoreWall_L3
+
+        ; User's Vertical Wall at edi = 9 (Core Structure 1 - Left)
+        cmp edi, 9
+        jne CheckTwoShape_Entry_L3
+        cmp esi, 4
+        jl CheckTwoShape_Entry_L3
+        cmp esi, 16
+        jg CheckTwoShape_Entry_L3
+        jmp StoreWall_L3
+
+    CheckTwoShape_Entry_L3:
+        ; User's '2' Shape Walls (Core Structure 2 - Center)
+        ; Top horizontal bar of '2': esi = 6, edi from 18 to 26
+        cmp esi, 6
+        jne CheckTwoShape_MiddlePart_L3
+        cmp edi, 18
+        jl CheckOneShape_Entry_L3
+        cmp edi, 26
+        jg CheckOneShape_Entry_L3
+        jmp StoreWall_L3
+
+    CheckTwoShape_MiddlePart_L3:
+        ; Right vertical bar of '2': edi = 26, esi from 6 to 10
+        cmp edi, 26
+        jne CheckTwoShape_BottomPart_L3
+        cmp esi, 6
+        jl CheckOneShape_Entry_L3
+        cmp esi, 10
+        jg CheckOneShape_Entry_L3
+        jmp StoreWall_L3
+
+    CheckTwoShape_BottomPart_L3:
+        ; Middle horizontal bar of '2': esi = 10, edi from 18 to 26
+        cmp esi, 10
+        jne CheckTwoShape_LeftPart_L3
+        cmp edi, 18
+        jl CheckOneShape_Entry_L3
+        cmp edi, 26
+        jg CheckOneShape_Entry_L3
+        jmp StoreWall_L3
+
+    CheckTwoShape_LeftPart_L3:
+        ; Left vertical bar of '2': edi = 18, esi from 10 to 14
+        cmp edi, 18
+        jne CheckTwoShape_HorizontalBottom_L3
+        cmp esi, 10
+        jl CheckOneShape_Entry_L3
+        cmp esi, 14
+        jg CheckOneShape_Entry_L3
+        jmp StoreWall_L3
+
+    CheckTwoShape_HorizontalBottom_L3:
+        ; Bottom most horizontal bar of '2': esi = 14, edi from 18 to 26
+        cmp esi, 14
+        jne CheckOneShape_Entry_L3
+        cmp edi, 18
+        jl CheckOneShape_Entry_L3
+        cmp edi, 26
+        jg CheckOneShape_Entry_L3
+        jmp StoreWall_L3
+
+    CheckOneShape_Entry_L3:
+        ; User's Vertical Wall at edi = 35 (Core Structure 3 - Right)
+        cmp edi, 35
+        jne CheckL3_H_Shape_TL_V1_L3
+        cmp esi, 4
+        jl CheckL3_H_Shape_TL_V1_L3
+        cmp esi, 16
+        jg CheckL3_H_Shape_TL_V1_L3
+        jmp StoreWall_L3
+
+    CheckL3_H_Shape_TL_V1_L3: ; Top-Left H-Shape: Vertical 1
+        cmp edi, 4
+        jne CheckL3_H_Shape_TL_V2_L3
+        cmp esi, 2
+        jl CheckL3_H_Shape_TL_V2_L3
+        cmp esi, 4
+        jg CheckL3_H_Shape_TL_V2_L3
+        jmp StoreWall_L3
+    CheckL3_H_Shape_TL_V2_L3: ; Top-Left H-Shape: Vertical 2
+        cmp edi, 6
+        jne CheckL3_H_Shape_TL_H_L3_Orig ; Changed label to avoid conflict with extended
+        cmp esi, 2
+        jl CheckL3_H_Shape_TL_H_L3_Orig
+        cmp esi, 4
+        jg CheckL3_H_Shape_TL_H_L3_Orig
+        jmp StoreWall_L3
+    CheckL3_H_Shape_TL_H_L3_Orig: ; Top-Left H-Shape: Original Horizontal Connector (kept for clarity, new one below)
+        cmp esi, 3
+        jne CheckL3_H_Shape_TR_V1_L3
+        cmp edi, 4
+        jl CheckL3_H_Shape_TR_V1_L3
+        cmp edi, 6
+        jg CheckL3_H_Shape_TR_V1_L3
+        jmp StoreWall_L3
+
+    CheckL3_H_Shape_TR_V1_L3: ; Top-Right H-Shape: Vertical 1 (edi=38)
+        cmp edi, 38
+        jne CheckL3_H_Shape_TR_V2_L3
+        cmp esi, 2
+        jl CheckL3_H_Shape_TR_V2_L3
+        cmp esi, 4
+        jg CheckL3_H_Shape_TR_V2_L3
+        jmp StoreWall_L3
+    CheckL3_H_Shape_TR_V2_L3: ; Top-Right H-Shape: Vertical 2 (edi=40)
+        cmp edi, 40
+        jne CheckL3_H_Shape_TR_H_L3_Orig ; Changed label
+        cmp esi, 2
+        jl CheckL3_H_Shape_TR_H_L3_Orig
+        cmp esi, 4
+        jg CheckL3_H_Shape_TR_H_L3_Orig
+        jmp StoreWall_L3
+    CheckL3_H_Shape_TR_H_L3_Orig: ; Top-Right H-Shape: Original Horizontal Connector
+        cmp esi, 3
+        jne CheckL3_H_Shape_BL_V1_L3
+        cmp edi, 38
+        jl CheckL3_H_Shape_BL_V1_L3
+        cmp edi, 40
+        jg CheckL3_H_Shape_BL_V1_L3
+        jmp StoreWall_L3
+
+    CheckL3_H_Shape_BL_V1_L3: ; Bottom-Left H-Shape: Vertical 1
+        cmp edi, 4
+        jne CheckL3_H_Shape_BL_V2_L3
+        cmp esi, 17
+        jl CheckL3_H_Shape_BL_V2_L3
+        cmp esi, 19
+        jg CheckL3_H_Shape_BL_V2_L3
+        jmp StoreWall_L3
+    CheckL3_H_Shape_BL_V2_L3: ; Bottom-Left H-Shape: Vertical 2
+        cmp edi, 6
+        jne CheckL3_H_Shape_BL_H_L3_Orig ; Changed label
+        cmp esi, 17
+        jl CheckL3_H_Shape_BL_H_L3_Orig
+        cmp esi, 19
+        jg CheckL3_H_Shape_BL_H_L3_Orig
+        jmp StoreWall_L3
+    CheckL3_H_Shape_BL_H_L3_Orig: ; Bottom-Left H-Shape: Original Horizontal Connector
+        cmp esi, 18
+        jne CheckL3_H_Shape_BR_V1_L3
+        cmp edi, 4
+        jl CheckL3_H_Shape_BR_V1_L3
+        cmp edi, 6
+        jg CheckL3_H_Shape_BR_V1_L3
+        jmp StoreWall_L3
+
+    CheckL3_H_Shape_BR_V1_L3: ; Bottom-Right H-Shape: Vertical 1 (edi=38)
+        cmp edi, 38
+        jne CheckL3_H_Shape_BR_V2_L3
+        cmp esi, 17
+        jl CheckL3_H_Shape_BR_V2_L3
+        cmp esi, 19
+        jg CheckL3_H_Shape_BR_V2_L3
+        jmp StoreWall_L3
+    CheckL3_H_Shape_BR_V2_L3: ; Bottom-Right H-Shape: Vertical 2 (edi=40)
+        cmp edi, 40
+        jne CheckL3_H_Shape_BR_H_L3_Orig ; Changed label
+        cmp esi, 17
+        jl CheckL3_H_Shape_BR_H_L3_Orig
+        cmp esi, 19
+        jg CheckL3_H_Shape_BR_H_L3_Orig
+        jmp StoreWall_L3
+    CheckL3_H_Shape_BR_H_L3_Orig: ; Bottom-Right H-Shape: Original Horizontal Connector
+        cmp esi, 18
+        jne CheckL3_T_Blockade_Top_H_L3
+        cmp edi, 38
+        jl CheckL3_T_Blockade_Top_H_L3
+        cmp edi, 40
+        jg CheckL3_T_Blockade_Top_H_L3
+        jmp StoreWall_L3
+
+    CheckL3_T_Blockade_Top_H_L3: ; Top T-Blockade: Horizontal Bar
+        cmp esi, 4
+        jne CheckL3_T_Blockade_Top_V_L3
+        cmp edi, 21
+        jl CheckL3_T_Blockade_Top_V_L3
+        cmp edi, 23
+        jg CheckL3_T_Blockade_Top_V_L3
+        jmp StoreWall_L3
+    CheckL3_T_Blockade_Top_V_L3: ; Top T-Blockade: Vertical Stem
+        cmp edi, 22
+        jne CheckL3_T_Blockade_Bottom_H_L3
+        cmp esi, 5
+        jne CheckL3_T_Blockade_Bottom_H_L3
+        jmp StoreWall_L3
+
+    CheckL3_T_Blockade_Bottom_H_L3: ; Bottom T-Blockade: Horizontal Bar
+        cmp esi, 16
+        jne CheckL3_T_Blockade_Bottom_V_L3
+        cmp edi, 21
+        jl CheckL3_T_Blockade_Bottom_V_L3
+        cmp edi, 23
+        jg CheckL3_T_Blockade_Bottom_V_L3
+        jmp StoreWall_L3
+    CheckL3_T_Blockade_Bottom_V_L3: ; Bottom T-Blockade: Vertical Stem
+        cmp edi, 22
+        jne CheckL3_Cross_Left_H_L3
+        cmp esi, 15
+        jne CheckL3_Cross_Left_H_L3
+        jmp StoreWall_L3
+
+    CheckL3_Cross_Left_H_L3: ; Left Cross-Shape: Horizontal Part
+        cmp esi, 10
+        jne CheckL3_Cross_Left_V_L3
+        cmp edi, 3
+        jl CheckL3_Cross_Left_V_L3
+        cmp edi, 5
+        jg CheckL3_Cross_Left_V_L3
+        jmp StoreWall_L3
+    CheckL3_Cross_Left_V_L3: ; Left Cross-Shape: Vertical Part
+        cmp edi, 4
+        jne CheckL3_Cross_Right_H_L3
+        cmp esi, 9
+        jl CheckL3_Cross_Right_H_L3
+        cmp esi, 11
+        jg CheckL3_Cross_Right_H_L3
+        jmp StoreWall_L3
+
+    CheckL3_Cross_Right_H_L3: ; Right Cross-Shape: Horizontal Part
+        cmp esi, 10
+        jne CheckL3_Cross_Right_V_L3
+        cmp edi, 39
+        jl CheckL3_Cross_Right_V_L3
+        cmp edi, 41
+        jg CheckL3_Cross_Right_V_L3
+        jmp StoreWall_L3
+    CheckL3_Cross_Right_V_L3: ; Right Cross-Shape: Vertical Part
+        cmp edi, 40
+        jne CheckL3_NEW_CB_Top_Left_L3
+        cmp esi, 9
+        jl CheckL3_NEW_CB_Top_Left_L3
+        cmp esi, 11
+        jg CheckL3_NEW_CB_Top_Left_L3
+        jmp StoreWall_L3
+
+    CheckL3_NEW_CB_Top_Left_L3: ; Top Corridor, Left Block
+        cmp esi, 1
+        jne CheckL3_NEW_CB_Top_Right_L3
+        cmp edi, 10
+        jl CheckL3_NEW_CB_Top_Right_L3
+        cmp edi, 11
+        jg CheckL3_NEW_CB_Top_Right_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_CB_Top_Right_L3: ; Top Corridor, Right Block
+        cmp esi, 1
+        jne CheckL3_NEW_CB_Bottom_Left_L3
+        cmp edi, 33
+        jl CheckL3_NEW_CB_Bottom_Left_L3
+        cmp edi, 34
+        jg CheckL3_NEW_CB_Bottom_Left_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_CB_Bottom_Left_L3: ; Bottom Corridor, Left Block
+        cmp esi, 20
+        jne CheckL3_NEW_CB_Bottom_Right_L3
+        cmp edi, 10
+        jl CheckL3_NEW_CB_Bottom_Right_L3
+        cmp edi, 11
+        jg CheckL3_NEW_CB_Bottom_Right_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_CB_Bottom_Right_L3: ; Bottom Corridor, Right Block
+        cmp esi, 20
+        jne CheckL3_NEW_SCF_Left_Top_L3
+        cmp edi, 33
+        jl CheckL3_NEW_SCF_Left_Top_L3
+        cmp edi, 34
+        jg CheckL3_NEW_SCF_Left_Top_L3
+        jmp StoreWall_L3
+
+    CheckL3_NEW_SCF_Left_Top_L3: ; Left Channel, Top Filler
+        cmp esi, 5
+        jne CheckL3_NEW_SCF_Left_Bottom_L3
+        cmp edi, 11
+        jl CheckL3_NEW_SCF_Left_Bottom_L3
+        cmp edi, 12
+        jg CheckL3_NEW_SCF_Left_Bottom_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_SCF_Left_Bottom_L3: ; Left Channel, Bottom Filler
+        cmp esi, 16
+        jne CheckL3_NEW_SCF_Right_Top_L3
+        cmp edi, 11
+        jl CheckL3_NEW_SCF_Right_Top_L3
+        cmp edi, 12
+        jg CheckL3_NEW_SCF_Right_Top_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_SCF_Right_Top_L3: ; Right Channel, Top Filler
+        cmp esi, 5
+        jne CheckL3_NEW_SCF_Right_Bottom_L3
+        cmp edi, 32
+        jl CheckL3_NEW_SCF_Right_Bottom_L3
+        cmp edi, 33
+        jg CheckL3_NEW_SCF_Right_Bottom_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_SCF_Right_Bottom_L3: ; Right Channel, Bottom Filler
+        cmp esi, 16
+        jne CheckL3_NEW_CFB_Left_Top_L3
+        cmp edi, 32
+        jl CheckL3_NEW_CFB_Left_Top_L3
+        cmp edi, 33
+        jg CheckL3_NEW_CFB_Left_Top_L3
+        jmp StoreWall_L3
+
+    CheckL3_NEW_CFB_Left_Top_L3: ; Left of '2', Top Block
+        cmp edi, 16
+        jne CheckL3_NEW_CFB_Left_Bottom_L3
+        cmp esi, 7
+        jl CheckL3_NEW_CFB_Left_Bottom_L3
+        cmp esi, 8
+        jg CheckL3_NEW_CFB_Left_Bottom_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_CFB_Left_Bottom_L3: ; Left of '2', Bottom Block
+        cmp edi, 16
+        jne CheckL3_NEW_CFB_Right_Top_L3
+        cmp esi, 12
+        jl CheckL3_NEW_CFB_Right_Top_L3
+        cmp esi, 13
+        jg CheckL3_NEW_CFB_Right_Top_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_CFB_Right_Top_L3: ; Right of '2', Top Block
+        cmp edi, 28
+        jne CheckL3_NEW_CFB_Right_Bottom_L3
+        cmp esi, 7
+        jl CheckL3_NEW_CFB_Right_Bottom_L3
+        cmp esi, 8
+        jg CheckL3_NEW_CFB_Right_Bottom_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_CFB_Right_Bottom_L3: ; Right of '2', Bottom Block
+        cmp edi, 28
+        jne CheckL3_NEW_ISB_Top_Left_L3
+        cmp esi, 12
+        jl CheckL3_NEW_ISB_Top_Left_L3
+        cmp esi, 13
+        jg CheckL3_NEW_ISB_Top_Left_L3
+        jmp StoreWall_L3
+
+    CheckL3_NEW_ISB_Top_Left_L3: ; Top-Left Inner Block
+        cmp esi, 7
+        jne CheckL3_NEW_ISB_Top_Right_L3
+        cmp edi, 12
+        jl CheckL3_NEW_ISB_Top_Right_L3
+        cmp edi, 13
+        jg CheckL3_NEW_ISB_Top_Right_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_ISB_Top_Right_L3: ; Top-Right Inner Block
+        cmp esi, 7
+        jne CheckL3_NEW_ISB_Bottom_Left_L3
+        cmp edi, 31
+        jl CheckL3_NEW_ISB_Bottom_Left_L3
+        cmp edi, 32
+        jg CheckL3_NEW_ISB_Bottom_Left_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_ISB_Bottom_Left_L3: ; Bottom-Left Inner Block
+        cmp esi, 13
+        jne CheckL3_NEW_ISB_Bottom_Right_L3
+        cmp edi, 12
+        jl CheckL3_NEW_ISB_Bottom_Right_L3
+        cmp edi, 13
+        jg CheckL3_NEW_ISB_Bottom_Right_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_ISB_Bottom_Right_L3: ; Bottom-Right Inner Block
+        cmp esi, 13
+        jne CheckL3_NEW_EHSC_TL_L3 ; Jump to the newest set of walls
+        cmp edi, 31
+        jl CheckL3_NEW_EHSC_TL_L3
+        cmp edi, 32
+        jg CheckL3_NEW_EHSC_TL_L3
+        jmp StoreWall_L3
+
+    CheckL3_NEW_EHSC_TL_L3: ; H-Shape Connector Top-Left
+        cmp esi, 3
+        jne CheckL3_NEW_EHSC_TR_L3
+        cmp edi, 3 
+        jl CheckL3_NEW_EHSC_TR_L3
+        cmp edi, 7
+        jg CheckL3_NEW_EHSC_TR_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_EHSC_TR_L3: ; H-Shape Connector Top-Right
+        cmp esi, 3
+        jne CheckL3_NEW_EHSC_BL_L3
+        cmp edi, 37
+        jl CheckL3_NEW_EHSC_BL_L3
+        cmp edi, 41 
+        jg CheckL3_NEW_EHSC_BL_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_EHSC_BL_L3: ; H-Shape Connector Bottom-Left
+        cmp esi, 18
+        jne CheckL3_NEW_EHSC_BR_L3
+        cmp edi, 3 
+        jl CheckL3_NEW_EHSC_BR_L3
+        cmp edi, 7
+        jg CheckL3_NEW_EHSC_BR_L3
+        jmp StoreWall_L3
+    CheckL3_NEW_EHSC_BR_L3: ; H-Shape Connector Bottom-Right
+        cmp esi, 18
+        jne CheckL3_NEW_HBI_TL_1_L3
+        cmp edi, 37 
+        jl CheckL3_NEW_HBI_TL_1_L3
+        cmp edi, 41 
+        jg CheckL3_NEW_HBI_TL_1_L3
+        jmp StoreWall_L3
+
+    CheckL3_NEW_HBI_TL_1_L3: ; H-Shape Barrier Inside Top-Left, Arm 1
+        cmp esi, 2
+        jne CheckL3_NEW_HBI_TL_2_L3
+        cmp edi, 5
+        je StoreWall_L3
+    CheckL3_NEW_HBI_TL_2_L3: ; H-Shape Barrier Inside Top-Left, Arm 2
+        cmp esi, 4
+        jne CheckL3_NEW_HBI_TR_1_L3
+        cmp edi, 5
+        je StoreWall_L3
+
+    CheckL3_NEW_HBI_TR_1_L3: ; H-Shape Barrier Inside Top-Right, Arm 1
+        cmp esi, 2
+        jne CheckL3_NEW_HBI_TR_2_L3
+        cmp edi, 39
+        je StoreWall_L3
+    CheckL3_NEW_HBI_TR_2_L3: ; H-Shape Barrier Inside Top-Right, Arm 2
+        cmp esi, 4
+        jne CheckL3_NEW_HBI_BL_1_L3
+        cmp edi, 39
+        je StoreWall_L3
+
+    CheckL3_NEW_HBI_BL_1_L3: ; H-Shape Barrier Inside Bottom-Left, Arm 1
+        cmp esi, 17
+        jne CheckL3_NEW_HBI_BL_2_L3
+        cmp edi, 5
+        je StoreWall_L3
+    CheckL3_NEW_HBI_BL_2_L3: ; H-Shape Barrier Inside Bottom-Left, Arm 2
+        cmp esi, 19
+        jne CheckL3_NEW_HBI_BR_1_L3
+        cmp edi, 5
+        je StoreWall_L3
+
+    CheckL3_NEW_HBI_BR_1_L3: ; H-Shape Barrier Inside Bottom-Right, Arm 1
+        cmp esi, 17
+        jne CheckL3_NEW_HBI_BR_2_L3
+        cmp edi, 39
+        je StoreWall_L3
+    CheckL3_NEW_HBI_BR_2_L3: ; H-Shape Barrier Inside Bottom-Right, Arm 2
+        cmp esi, 19
+        jne CheckL3_NEW_CTB_Top_L_L3
+        cmp edi, 39
+        je StoreWall_L3
+
+    CheckL3_NEW_CTB_Top_L_L3: ; Connecting T-Blockades Top Left
+        cmp esi, 4
+        jne CheckL3_NEW_CTB_Top_R_L3
+        cmp edi, 20 ; Next to T-blockade, towards '2'
+        je StoreWall_L3
+    CheckL3_NEW_CTB_Top_R_L3: ; Connecting T-Blockades Top Right
+        cmp esi, 4
+        jne CheckL3_NEW_CTB_Bottom_L_L3
+        cmp edi, 24 ; Next to T-blockade, towards '2'
+        je StoreWall_L3
+    CheckL3_NEW_CTB_Bottom_L_L3: ; Connecting T-Blockades Bottom Left
+        cmp esi, 16
+        jne CheckL3_NEW_CTB_Bottom_R_L3
+        cmp edi, 20 ; Next to T-blockade, towards '2'
+        je StoreWall_L3
+    CheckL3_NEW_CTB_Bottom_R_L3: ; Connecting T-Blockades Bottom Right
+        cmp esi, 16
+        jne CheckL3_NEW_ASCB_L_T_L3
+        cmp edi, 24 ; Next to T-blockade, towards '2'
+        je StoreWall_L3
+
+    CheckL3_NEW_ASCB_L_T_L3: ; Side Channel Blocks Left Top
+        cmp esi, 7
+        jne CheckL3_NEW_ASCB_L_B_L3
+        cmp edi, 7
+        je StoreWall_L3
+    CheckL3_NEW_ASCB_L_B_L3: ; Side Channel Blocks Left Bottom
+        cmp esi, 14
+        jne CheckL3_NEW_ASCB_R_T_L3
+        cmp edi, 7
+        je StoreWall_L3
+    CheckL3_NEW_ASCB_R_T_L3: ; Side Channel Blocks Right Top
+        cmp esi, 7
+        jne CheckL3_NEW_ASCB_R_B_L3
+        cmp edi, 37
+        je StoreWall_L3
+    CheckL3_NEW_ASCB_R_B_L3: ; Side Channel Blocks Right Bottom
+        cmp esi, 14
+        jne CheckPacmanPos_L3
+        cmp edi, 37
+        je StoreWall_L3
+
+    CheckPacmanPos_L3:
+        cmp esi, pacmanRow
+        jne StoreDot_L3
+        cmp edi, pacmanCol
+        jne StoreDot_L3
+        jmp StorePacman_L3
+
+    StoreWall_L3:
+        mov al, wallChar
+        jmp MoveCharacter_L3
+
+    StoreDot_L3:
+        mov al, dotChar
+        jmp MoveCharacter_L3
+
+    StorePacman_L3:
+        mov al, 50h         ; Character for Pacman (ASCII 'P')
+        ; jmp MoveCharacter_L3 ; Fall through
+
+    MoveCharacter_L3:
+        mov [GRID + ebx * TYPE GRID], al
+        inc ebx
+        dec ecx
+        jnz InnerLoopL3
+
+        pop ecx
+        dec ecx
+        jnz OuterLoopL3
+    ret
+initialiseLevel3 ENDP
