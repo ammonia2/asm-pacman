@@ -180,8 +180,12 @@ playLevel1 PROC
     call Clrscr
     call drawLevel1
 
+    CALL playGameMusic
+
     mov speedCounter, 0 ; for ghosts movement speed
     inputLoop_L1:
+        CALL UpdateAudio
+
         mov edx, ecx
         call ReadKey
         jz noInput_L1
@@ -306,6 +310,8 @@ playLevel1 PROC
         jmp inputLoop_L1
 
     level1Finished:
+        CALL playDeathSound
+
         dec lives
         CALL displayLives
         cmp lives, 0
@@ -326,6 +332,7 @@ playLevel1 PROC
             mov dl, 0
             call Gotoxy
 
+        CALL stopBackgroundMusic
         ret
 playLevel1 ENDP
 

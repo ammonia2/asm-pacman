@@ -1,3 +1,3 @@
 ﻿  Assembling main.asm...
-main.asm(3): warning A4011: multiple .MODEL directives found : .MODEL ignored
+main.asm(4): warning A4011: multiple .MODEL directives found : .MODEL ignored
   pacman-asm.vcxproj -> E:\fast\COAL\pacman-asm\Debug\pacman-asm.exe

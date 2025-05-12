@@ -1,7 +1,10 @@
 INCLUDE Irvine32.inc
+INCLUDE macros.inc
 .386
 .model flat, stdcall
 .stack 4096
+
+includelib Winmm.lib
 
 buffsize = 2000 ; for file reading/writing
 
@@ -18,11 +21,26 @@ RIGHT = 1
 DOWN  = 2
 LEFT  = 3
 
+; Sound playback flags
+SND_ASYNC = 0001h    ; Play asynchronously
+SND_LOOP = 0008h    ; Loop the sound
+SND_FILENAME = 00020000h ; Name is a file name
+SND_NODEFAULT = 0002h ; avoid playing df sound
+
 GRID_WIDTH = 45
 GRID_HEIGHT = 22
 GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 
 .data
+    ; sound files
+    lobbyMusic     BYTE "lobby_music.wav", 0
+    deathMusic     BYTE "pacman_death.wav", 0
+    levelMusic     BYTE "pacman_playing.wav", 0
+
+    deathSoundPlaying BYTE 0
+    deathSoundTimer   DWORD 0
+    deathSoundLength  DWORD 65 
+
     ; Ghost data
     ghosts         DWORD 20 DUP (?) ; 10 max
     numGhosts      BYTE ?
@@ -98,6 +116,11 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     comma          BYTE ", ", 0
 
 .code
+PlaySound PROTO,
+    pszSound:PTR BYTE,
+    hmod:DWORD,
+    fdwSound:DWORD
+
 INCLUDE level1.inc
 INCLUDE menuUtils.inc
 INCLUDE initialisations.inc
@@ -112,12 +135,75 @@ main PROC
     exit
 main ENDP
 
+;------------------------------------------------
+PlayBackgroundMusic PROC uses eax edx    
+    INVOKE PlaySound, 
+           ADDR lobbyMusic,
+           NULL,   ; No module handle
+           SND_ASYNC OR SND_LOOP OR SND_FILENAME  ; Play asynchronously and loop
+    
+    ret
+PlayBackgroundMusic ENDP
+
+StopBackgroundMusic PROC uses eax edx
+    INVOKE PlaySound, 
+           NULL,  ; to stop any playing sound
+           NULL,
+           0
+    
+    ret
+StopBackgroundMusic ENDP
+
+PlayGameMusic PROC uses eax edx    
+    INVOKE PlaySound, 
+           ADDR levelMusic,
+           NULL,
+           SND_ASYNC OR SND_LOOP OR SND_FILENAME 
+    
+    ret
+PlayGameMusic ENDP
+
+UpdateAudio PROC uses eax
+    cmp deathSoundPlaying, 0
+    je done_update
+    
+    dec deathSoundTimer
+    
+    ; Check if timer has expired
+    cmp deathSoundTimer, 0
+    jg done_update
+    
+    mov deathSoundPlaying, 0
+    call PlayGameMusic
+    
+done_update:
+    ret
+UpdateAudio ENDP
+
+PlayDeathSound PROC uses eax edx
+    call StopBackgroundMusic
+    
+    ; Play death sound
+    INVOKE PlaySound, 
+           ADDR deathMusic,
+           NULL,
+           SND_ASYNC OR SND_FILENAME OR SND_NODEFAULT
+    
+    ; Set the death sound flag and timer
+    mov deathSoundPlaying, 1
+    mov eax, deathSoundLength
+    mov deathSoundTimer, eax
+    
+    ret
+PlayDeathSound ENDP
+
 ;----------------------------------------------------
 InitializeGame PROC
     ; Set up initial game state
     mov currentMenu, MENU_HOME
     mov currentScore, 0
     
+    call PlayBackgroundMusic
     ret
 InitializeGame ENDP
 
@@ -130,7 +216,9 @@ startLevel1 PROC
     mov lives, 3
 
     call initialiseLevel1Ghosts
+    call StopBackgroundMusic
     call playLevel1
+    call PlayBackgroundMusic
 
     ret
 startLevel1 ENDP
@@ -144,7 +232,9 @@ startLevel2 PROC
     mov lives, 3
 
     call initialiseLevel2Ghosts
+    call StopBackgroundMusic
     call playLevel2
+    call PlayBackgroundMusic
 
     ret
 startLevel2 ENDP
@@ -158,11 +248,14 @@ startLevel3 PROC
     mov lives, 3
 
     call initialiseLevel3Ghosts
+    call StopBackgroundMusic
     call playLevel3
+    call PlayBackgroundMusic
 
     ret
 startLevel3 ENDP
 
+;-------------------------------------------------------
 generateRandomNumber PROC uses eax ebx ecx esi edi
     mov ebx, maxValue
     mov ecx, minValue
