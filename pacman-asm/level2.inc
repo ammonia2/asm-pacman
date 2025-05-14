@@ -191,6 +191,12 @@ playLevel2 PROC
         call ReadKey
         jz noInput_L2
 
+        cmp al, 'p'
+        jnz skipPause_L3
+        call PauseGame
+
+        skipPause_L3:
+
         cmp al, 77h ; lowercase 'w'
         jnz inputCheck2_L2
 
