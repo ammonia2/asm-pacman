@@ -84,7 +84,8 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     lives          DWORD 3
     scoreStr       BYTE "Current Score: ", 0
     livesStr       BYTE "Lives: ", 0
-    clearingStr    BYTE "     ", 0
+    clearingStr    BYTE "       ", 0
+    pauseStr       BYTE "Paused!", 0
 
     ; Menu state
     currentMenu    DWORD MENU_HOME
@@ -363,5 +364,26 @@ calculateDistance PROC uses ecx edx esi edi
     
     ret
 calculateDistance ENDP
+
+PauseGame PROC uses edx
+    mov dh, GRID_HEIGHT +3
+    mov dl, 0
+    call gotoxy
+    mov edx, offset pauseStr
+    call writestring
+
+    pauseLoop:
+        call readchar
+        cmp al, 'p'
+        jnz pauseLoop
+
+    mov dh, GRID_HEIGHT +3
+    mov dl, 0
+    call Gotoxy
+    mov edx, offset clearingStr
+    call writestring
+
+    ret
+PauseGame ENDP
 
 END main

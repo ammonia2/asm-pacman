@@ -190,6 +190,12 @@ playLevel1 PROC
         call ReadKey
         jz noInput_L1
 
+        cmp al, 'p'
+        jnz skipPause_L1
+        call PauseGame
+
+        skipPause_L1:
+
         cmp al, 77h ; lowercase 'w'
         jnz inputCheck2_L1
 
@@ -278,7 +284,7 @@ playLevel1 PROC
         jmp noInput_L1
 
         ; input processing
-    inputDone_L1:
+    inputDone_L1:  
         ; updating grid
 
         cmp gridVal, '.'
