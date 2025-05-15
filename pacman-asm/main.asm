@@ -66,6 +66,11 @@ GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
     pacmanRow      DWORD 8
     pacmanCol      DWORD 22
     gridVal        BYTE ?
+    fruits         DWORD 20 DUP(?)
+    fruitRow       DWORD ?
+    fruitCol       DWORD ?
+    numFruits      BYTE 2
+    FRUIT          BYTE '+'
     
     ; 1300
     GRID           BYTE GRID_WIDTH * GRID_HEIGHT DUP(?)
@@ -217,6 +222,8 @@ startLevel1 PROC
     mov lives, 3
 
     call initialiseLevel1Ghosts
+    mov numFruits, 2  ; 2 fruits
+    call initialiseFruits
     call StopBackgroundMusic
     call playLevel1
     call PlayBackgroundMusic
@@ -233,6 +240,8 @@ startLevel2 PROC
     mov lives, 3
 
     call initialiseLevel2Ghosts
+    mov numFruits, 4
+    call initialiseFruits
     call StopBackgroundMusic
     call playLevel2
     call PlayBackgroundMusic
@@ -249,6 +258,8 @@ startLevel3 PROC
     mov lives, 3
 
     call initialiseLevel3Ghosts
+    mov numFruits, 10
+    call initialiseFruits
     call StopBackgroundMusic
     call playLevel3
     call PlayBackgroundMusic
@@ -385,5 +396,81 @@ PauseGame PROC uses edx
 
     ret
 PauseGame ENDP
+
+getGridValFruits PROC uses eax ecx ebx esi
+    mov ebx, fruitRow
+    imul ebx, GRID_WIDTH
+    mov ecx, fruitCol
+    add ebx, ecx
+    mov al, GRID[ebx]
+    mov gridVal, al
+
+    ret
+getGridValFruits ENDP
+
+storeFruit PROC uses eax ebx ecx
+    mov ebx, fruitRow
+    imul ebx, GRID_WIDTH
+    mov ecx, fruitCol
+    add ebx, ecx
+    mov al, FRUIT
+    mov GRID[ebx], al
+
+    ; only redraw what's needed
+    mov dh, BYTE PTR fruitRow
+    add dh, 1
+    mov dl, BYTE PTR fruitCol
+    shl dl, 1
+    call Gotoxy
+    mov al, FRUIT
+    call WriteChar
+
+    ret
+storeFruit ENDP
+
+initialiseFruits PROC uses esi eax ebx ecx
+    LOCAL fruitCounter:DWORD
+
+    mov fruitCounter, 0
+    mov esi, 0 ; fruits count
+    
+    fruitInit:
+        ; fruitRow
+        mov maxValue, GRID_HEIGHT - 3
+        mov minValue, 3
+        call generateRandomNumber
+        mov ebx, randomNum
+        mov fruitRow, ebx
+        
+        ; fruitCol
+        mov maxValue, GRID_WIDTH - 3
+        mov minValue, 3
+        call generateRandomNumber
+        mov ecx, randomNum
+        mov fruitCol, ecx
+
+        ; inspect grid to confirm availability
+        call getGridValFruits
+        mov al, gridVal
+
+        cmp al, '.'
+        jnz fruitInit
+
+        mov eax, fruitRow
+        mov fruits[esi], eax
+        mov eax, fruitCol
+        mov fruits[esi + type fruits], eax
+        mov edx, fruitCounter
+        call storeFruit
+
+        add esi, 2 * type fruits
+        inc fruitCounter
+
+        mov eax, fruitCounter
+        cmp al, numFruits
+        jnz fruitInit
+
+    ret
+initialiseFruits ENDP
 
 END main

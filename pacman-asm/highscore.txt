@@ -16,3 +16,13 @@ cocomo: 16
 cocomo: 26
 fahid: 222
 fahid: 23
+abd: 87
+abd: 2
+abd: 6
+abd: 9
+abd: 14
+abd: 8
+nano: 1
+nano: 6
+nano: 1
+nano: 23

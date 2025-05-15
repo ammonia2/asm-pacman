@@ -294,6 +294,11 @@ playLevel3 PROC
         call displayScore
 
     skipScoreUpdate_L3:
+        cmp gridVal, '+'
+        jnz skipScoreUpdate2_L3
+        add currentScore, 20
+
+        skipScoreUpdate2_L3:
         call storePacmanL3
 
     noInput_L3:
